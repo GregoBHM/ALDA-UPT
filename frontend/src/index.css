@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --upt-navy: #00072D;
+  --upt-navy-light: #0a1a3f;
+  --upt-navy-dark: #000520;
+  --upt-gold: #eab308;
+  --upt-gold-light: #facc15;
+  --upt-orange: #f97316;
+  --upt-teal: #06b6d4;
+  --upt-white: #ffffff;
+  --upt-cream: #f8fafc;
+  --upt-gray: #e2e8f0;
+  --upt-text-dark: #00072D;
+  --upt-text-muted: #64748b;
+
+  --upt-bg: #00072D;
+  --upt-bg-deep: #000520;
+  --upt-surface: #0a1a3f;
+  --upt-surface-light: #132952;
+  --upt-surface-border: rgba(255, 255, 255, 0.08);
+  --upt-text-primary: #f1f5f9;
+  --upt-text-secondary: #cbd5e1;
+  --upt-text-tertiary: #64748b;
+
+  --upt-accent: #2563eb;
+  --upt-accent-light: #3b82f6;
+  --upt-accent-dark: #1d4ed8;
+  --upt-accent-surface: rgba(37, 99, 235, 0.12);
+
+  --upt-sidebar-bg: #000520;
+  --upt-sidebar-surface: #00072D;
+  --upt-sidebar-border: rgba(255, 255, 255, 0.06);
+  --upt-sidebar-text: #64748b;
+  --upt-sidebar-text-active: #f1f5f9;
+
+  --upt-glass-bg: rgba(255, 255, 255, 0.72);
+  --upt-glass-border: rgba(255, 255, 255, 0.5);
+  --upt-glass-blur: blur(16px);
+
+  --upt-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --upt-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --upt-shadow-lg: 0 10px 40px rgba(15, 23, 42, 0.10), 0 4px 12px rgba(15, 23, 42, 0.06);
+  --upt-shadow-glow-gold: 0 0 20px rgba(234, 179, 8, 0.15), 0 0 60px rgba(234, 179, 8, 0.05);
+  --upt-shadow-glow-accent: 0 0 20px rgba(37, 99, 235, 0.15), 0 0 60px rgba(37, 99, 235, 0.05);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "Fira Code", "JetBrains Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--upt-bg);
+  color: var(--upt-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 16px 4px rgba(234, 179, 8, 0.15);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes subtle-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}

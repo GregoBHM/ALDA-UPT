@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: alda_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: alda_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: alda_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: alda_chroma
+    restart: always
+    environment:
+      - IS_PERSISTENT=TRUE
+    ports:
+      - "8100:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: alda_api
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://alda_admin:${DB_PASSWORD}@postgres:5432/alda_db
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - chromadb
+
+volumes:
+  postgres_data:
+  chroma_data:

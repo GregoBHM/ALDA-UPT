@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+chromadb
+pdfplumber
+google-genai
+openai
+python-dotenv
+pandas
+openpyxl
+docker
