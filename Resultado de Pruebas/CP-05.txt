@@ -1,0 +1,7 @@
+=== Resultados CP-05 (Prueba de Rendimiento) ===
+Intentos exitosos: 15/15
+Tiempo Promedio de autenticación: 0.0248 segundos
+Tiempo Mínimo: 0.0114 segundos
+Tiempo Máximo: 0.1366 segundos
+
+Observación: El tiempo promedio de autenticación medido en 15 intentos es óptimo y cumple sobradamente con el requerimiento de rendimiento de no exceder los 5 segundos.

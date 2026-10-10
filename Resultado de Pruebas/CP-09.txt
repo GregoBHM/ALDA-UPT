@@ -1,0 +1,5 @@
+=== Resultados CP-09 (Integración OAuth + Dominio) ===
+Intento Institucional -> Status esperado: 200 | Status real: 200
+Intento Externo (Gmail) -> Status esperado: 403 | Status real: 403
+
+Observación: El sistema procesó ambos intentos correctamente integrando la lógica de validación de dominios en el endpoint, devolviendo 200 OK para el permitido y 403 Forbidden para el denegado.

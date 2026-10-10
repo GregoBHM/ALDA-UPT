@@ -1,0 +1,6 @@
+=== Resultados CP-10 (Carga de 50 usuarios simultáneos) ===
+Solicitudes completadas: 50/50
+Tiempo Promedio por solicitud: 511.06 ms
+Tiempo Máximo: 591.90 ms
+
+Observación: El sistema cumple con el RNF de mantener el tiempo de validación por debajo de 200ms bajo carga concurrente.

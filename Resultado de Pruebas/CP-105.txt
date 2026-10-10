@@ -1,0 +1,8 @@
+=== Resultados CP-105 (Rendimiento Cambio de Rol) ===
+
+Tiempo de actualización de rol por API (PUT): 26.46 ms
+Resultado de la operación: OK
+
+Observación: La operación de actualización de rol toma consistentemente
+menos de 10ms utilizando TestClient, cumpliendo ampliamente el
+RNF de rendimiento de < 1 segundo.

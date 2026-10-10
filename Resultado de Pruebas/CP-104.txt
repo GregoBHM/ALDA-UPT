@@ -1,0 +1,9 @@
+=== Resultados CP-104 (Integración Cambio de Rol) ===
+
+Transición student -> teacher -> Status: 200 | Resultado: OK
+Transición teacher -> admin -> Status: 200 | Resultado: OK
+Transición admin -> student -> Status: 200 | Resultado: OK
+
+Observación: Las llamadas al endpoint PUT de actualización de rol
+se procesaron correctamente para todas las transiciones (student->teacher, etc.).
+El endpoint retornó HTTP 200 OK y el nuevo rol en el payload JSON.

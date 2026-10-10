@@ -1,0 +1,4 @@
+Status: 200
+Response: {"id":"5daa34d2-2b3e-41a9-934c-3cebf2b4ec66","email":"ac2022074258@virtual.upt.pe","name":"ANDY MICHAEL CALIZAYA LADERA","avatar_url":"https://example.com/avatar.png","role":"student","is_active":true,"last_login":"2026-10-02T17:43:29.025508Z"}
+
+El Frontend envió el payload correctamente y el Backend respondió con un código 200 OK y el perfil del usuario autenticado.

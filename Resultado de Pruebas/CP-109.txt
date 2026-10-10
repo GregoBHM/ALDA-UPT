@@ -1,0 +1,8 @@
+=== Resultados CP-109 (Integración Suspensión + Login) ===
+
+Login usuario ACTIVO -> Status: 200 | Resultado: OK
+Login usuario SUSPENDIDO -> Status: 403 | Resultado: OK - Rechazado con BANNED_USER
+
+Observación: Usando TestClient y Mock DB. El flujo de autenticación
+verifica is_active exitosamente. Un usuario suspendido con correo
+válido fue rechazado con BANNED_USER (HTTP 403).

@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres:15-alpine
+    container_name: alda_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: alda_db
+      POSTGRES_USER: alda_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - alda_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alda_admin -d alda_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: alda_chromadb
+    restart: unless-stopped
+    environment:
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - alda_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: alda_backend
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp
+      - uploads_data:/app/uploads
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      POSTGRES_DB: alda_db
+      POSTGRES_USER: alda_admin
+      DB_PASSWORD: ${DB_PASSWORD}
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY}
+    networks:
+      - alda_network
+      - dokploy-network
+    depends_on:
+      db:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      # HTTPS
+      - "traefik.http.routers.backend.rule=Host(`api.sparkingcraft.com`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      # Redirección HTTP → HTTPS
+      - "traefik.http.routers.backend-http.rule=Host(`api.sparkingcraft.com`)"
+      - "traefik.http.routers.backend-http.entrypoints=web"
+      - "traefik.http.routers.backend-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: "89768386906-1i19pg7ocbcjb9eca7gh8hq5buahdqeo.apps.googleusercontent.com"
+        VITE_API_URL: "https://api.sparkingcraft.com"
+    container_name: alda_frontend
+    restart: unless-stopped
+    networks:
+      - alda_network
+      - dokploy-network
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      # HTTPS
+      - "traefik.http.routers.frontend.rule=Host(`alda-upt.sytes.net`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      # Redirección HTTP → HTTPS
+      - "traefik.http.routers.frontend-http.rule=Host(`alda-upt.sytes.net`)"
+      - "traefik.http.routers.frontend-http.entrypoints=web"
+      - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+
+volumes:
+  postgres_data:
+  chroma_data:
+  uploads_data:
+
+networks:
+  alda_network:
+    driver: bridge
+  dokploy-network:
+    external: true

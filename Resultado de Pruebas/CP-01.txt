@@ -1,0 +1,34 @@
+PS C:\WINDOWS\System32> cd "c:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend"
+PS C:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend> venv\Scripts\activate
+(venv) PS C:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend> pytest tests/test_cp01_validate_domain.py -v -s
+================================================= test session starts =================================================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend
+plugins: anyio-4.15.1
+collected 7 items
+
+tests/test_cp01_validate_domain.py::TestCorreoInstitucional::test_correo_institucional_valido_acepta   [OK] Correo institucional aceptado correctamente (latencia: 0.9ms)
+PASSED
+tests/test_cp01_validate_domain.py::TestCorreoInstitucional::test_correo_institucional_minusculas   [OK] Dominio en mayusculas aceptado (case-insensitive)
+PASSED
+tests/test_cp01_validate_domain.py::TestCorreoExterno::test_correo_gmail_rechazado_403   [OK] Correo gmail.com rechazado con 403 (latencia: 0.3ms)
+     Mensaje: "Solo correos institucionales o autorizados están permitidos."
+PASSED
+tests/test_cp01_validate_domain.py::TestCorreoExterno::test_correo_hotmail_rechazado_403   [OK] Correo hotmail.com rechazado con 403
+PASSED
+tests/test_cp01_validate_domain.py::TestCorreoExterno::test_correo_yahoo_rechazado_403   [OK] Correo yahoo.com rechazado con 403
+PASSED
+tests/test_cp01_validate_domain.py::TestCorreoExterno::test_correo_dominio_similar_rechazado   [OK] Dominio similar (spoofing) rechazado con 403
+PASSED
+tests/test_cp01_validate_domain.py::TestCorreoExterno::test_correo_otro_dominio_universitario   [OK] Correo de otra universidad rechazado con 403
+PASSED
+
+================================================== warnings summary ===================================================
+schemas\auth.py:16
+  C:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend\tests\..\schemas\auth.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class UserResponse(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================================ 7 passed, 1 warning in 0.70s =============================================
+(venv) PS C:\Users\Andy\Documents\CONSTRUCCION DE SOFTWARE II\ALDA-UPT-main\ALDA-UPT-main\backend>

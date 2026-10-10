@@ -1,0 +1,13 @@
+=== Resultados CP-110 (Tiempo de Aplicación de Suspensión) ===
+
+Tiempo de suspensión (PUT API admin): 28.07 ms
+Tiempo de verificación de bloqueo (login rechazado): 4.20 ms
+Login bloqueado inmediatamente: Sí
+
+Tiempo de reactivación (PUT API admin): 3.44 ms
+Tiempo de verificación de restauración (login exitoso): 4.31 ms
+Login restaurado correctamente: Sí
+
+Observación: Tanto la suspensión como la reactivación se aplican en la API
+en menos de 1 segundo (usualmente < 10ms usando TestClient). Cumple sobradamente
+con el RNF de rendimiento.
