@@ -47,9 +47,9 @@ git clone https://github.com/GregoBHM/ALDA-UPT.git
 cd ALDA-UPT
 ```
 
-### Paso 2 — Crear el archivo `.env` en la raíz del proyecto
+### Paso 2 — Configuración del archivo `.env.local`
 
-Crear el archivo `.env` con el siguiente contenido (todas las claves ya configuradas para local):
+El repositorio ya incluye el archivo `.env.local` preconfigurado con las claves necesarias para la ejecución local:
 
 ```ini
 # ── Base de Datos ─────────────────────────────────────────
@@ -72,15 +72,17 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:8000
 GOOGLE_AI_API_KEY=AIzaSyBM1TuB5E4RdSoIi6BsXmn8OI21S5Y7ofA
 ```
 
-> En **Windows PowerShell**, copiar el bloque de arriba en un nuevo archivo `.env` en la raíz del proyecto.
+> Si se clona en una nueva máquina sin el archivo, simplemente copia `.env.example` como `.env.local` y coloca las claves de arriba.
 
 ### Paso 3 — Levantar todo con Docker Compose
 
+Ejecuta el siguiente comando en la raíz del proyecto:
+
 ```bash
-docker compose -f docker-compose.local.yml up --build -d
+docker compose -f docker-compose.local.yml --env-file .env.local up --build -d
 ```
 
-Eso es todo. Docker descarga las imágenes, construye los contenedores y levanta el sistema completo.
+Docker descargará las imágenes oficiales, compilará el backend y frontend, y levantará los 4 servicios automáticamente en segundo plano.
 
 ---
 
@@ -146,8 +148,9 @@ docker exec -it alda_postgres_local psql -U alda_admin -d alda_db -c "\dt"
 ALDA-UPT/
 ├── docker-compose.local.yml   # ← Orquestador principal (despliegue local)
 ├── docker-compose.yml         # Orquestador de producción (Dokploy)
-├── .env                       # Variables de entorno locales (NO se sube a Git)
-├── .env.example               # Plantilla de variables (referencia)
+├── .env.local               # Variables de entorno locales (preconfigurado)
+├── .env.dokploy             # Variables de entorno para servidor Dokploy
+├── .env.example             # Plantilla de variables (referencia)
 ├── backend/
 │   ├── Dockerfile             # Build multi-stage Python 3.12-slim
 │   ├── main.py                # Punto de entrada FastAPI
