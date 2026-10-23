@@ -1,62 +1,47 @@
-# Entornos virtuales
+# ── Entornos virtuales ───────────────────────────────────
 venv/
 env/
+
+# ── Archivos .env (nunca subir claves reales al repo) ────
 .env
 .env.*
 !.env.example
 !.env.local
-backend/.env
-backend/.env.*
-!backend/.env.example
-database/.env
+!.env.dokploy
 
-# Archivos de caché y compilación de Python
+# ── Caché y compilación de Python ────────────────────────
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
 wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 
-# Archivos de caché de pytest
+# ── Pytest ───────────────────────────────────────────────
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Bases de datos locales
+# ── Bases de datos locales ────────────────────────────────
 *.db
 *.sqlite3
-test.db
 
-# Bases de datos vectoriales (ChromaDB)
-chroma_db/
-chromadb/
+# ── ChromaDB (base vectorial local) ──────────────────────
+backend/chroma_db/
 
-# Frontend (Node)
+# ── Frontend ──────────────────────────────────────────────
 frontend/node_modules/
 frontend/dist/
-frontend/.env
-frontend/.env.*
-!frontend/.env.example
 
-# Logs
-*.log
+# ── Uploads del backend ───────────────────────────────────
+backend/uploads/
 
-# SO
+# ── SO ────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
