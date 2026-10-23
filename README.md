@@ -121,21 +121,7 @@ Los 4 contenedores deben estar en estado **Up**:
 docker compose -f docker-compose.local.yml logs -f backend
 ```
 
-### 4. Pruebas unitarias del backend (CU-13 / CP-61)
-```bash
-cd backend
-venv\Scripts\python.exe -m pytest tests/test_cp61.py -v
-```
-```
-tests/test_cp61.py::test_cp61_crea_laboratorio_y_confirma_transaccion  PASSED
-tests/test_cp61.py::test_cp61_registra_tres_casos_y_uno_oculto         PASSED
-tests/test_cp61.py::test_cp61_aplica_valores_predeterminados           PASSED
-tests/test_cp61.py::test_cp61_rechaza_titulo_vacio_o_espacios[]        PASSED
-tests/test_cp61.py::test_cp61_rechaza_titulo_vacio_o_espacios[   ]     PASSED
-======================== 5 passed in 3.08s ==============================
-```
-
-### 5. Verificar tablas de la base de datos
+### 4. Verificar tablas de la base de datos
 ```bash
 docker exec -it alda_postgres_local psql -U alda_admin -d alda_db -c "\dt"
 ```
@@ -161,9 +147,7 @@ ALDA-UPT/
 │   ├── services/              # Lógica de negocio por rol
 │   ├── schemas/               # Validación Pydantic
 │   ├── core/                  # Seguridad, sesiones, dependencias
-│   ├── requirements.txt       # Dependencias Python
-│   └── tests/
-│       └── test_cp61.py       # Pruebas unitarias CU-13
+│   └── requirements.txt       # Dependencias Python
 ├── frontend/
 │   ├── Dockerfile             # Build Node 20 → Nginx
 │   ├── nginx.conf             # Configuración SPA (React Router)
@@ -189,24 +173,13 @@ docker compose -f docker-compose.local.yml down
 
 # Reinicio total desde cero (borra base de datos)
 docker compose -f docker-compose.local.yml down -v
-docker compose -f docker-compose.local.yml up --build -d
+docker compose -f docker-compose.local.yml --env-file .env.local up --build -d
 
 # Ver logs de un servicio específico
 docker compose -f docker-compose.local.yml logs -f frontend
+docker compose -f docker-compose.local.yml logs -f backend
 docker compose -f docker-compose.local.yml logs -f db
 ```
-
----
-
-## ⚠️ Solución de Problemas Comunes
-
-| Error | Causa | Solución |
-| :--- | :--- | :--- |
-| `failed to connect to docker API` | Docker Desktop no está iniciado | Abrir Docker Desktop y esperar hasta que el ícono quede verde |
-| `port 5432 already allocated` | PostgreSQL de Windows corriendo | `Stop-Service postgresql*` en PowerShell |
-| `port 8000 already allocated` | Otro proceso en el puerto | `Get-Process -Id (Get-NetTCPConnection -LocalPort 8000).OwningProcess \| Stop-Process -Force` |
-| `SESSION_SECRET debe tener 32 chars` | Clave corta o vacía en `.env` | Verificar que `SESSION_SECRET` tenga al menos 32 caracteres |
-| Frontend muestra `Network Error` | Backend aún arrancando | Esperar 30 seg y verificar `http://localhost:8000/api/health` |
 
 ---
 
