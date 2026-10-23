@@ -24,22 +24,6 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
 
-  fastapi:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: alda_api
-    restart: always
-    environment:
-      - DATABASE_URL=postgresql://alda_admin:${DB_PASSWORD}@postgres:5432/alda_db
-      - CHROMA_HOST=chromadb
-      - CHROMA_PORT=8000
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
-      - chromadb
-
 volumes:
   postgres_data:
   chroma_data:

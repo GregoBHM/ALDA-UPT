@@ -11,7 +11,9 @@ export default function TeacherOverview() {
   const fetchStats = async (isPolling = false) => {
     try {
       const res = await fetch(`${API_BASE}/api/teacher/stats`, {
-        headers: { 'X-User-ID': currentUser.id }
+        credentials: 'include',
+        headers: { 'X-User-ID': currentUser.id },
+        signal: AbortSignal.timeout(8000)
       });
       if (res.ok) setStats(await res.json());
       else if (!isPolling) setStats({ total_students: 0, total_courses: 0, total_labs: 0, total_attempts: 0, total_with_ai: 0, independence_rate: 0, recent_students: [] });
@@ -41,9 +43,9 @@ export default function TeacherOverview() {
   if (isLoading) {
     return (
       <div className="p-6 lg:p-8 h-full animate-pulse">
-        <div className="h-7 w-56 bg-white/[0.04] rounded mb-8" />
+        <div className="h-7 w-56 bg-[var(--upt-surface-light)] rounded mb-8" />
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {[1,2,3].map(i => <div key={i} className="h-28 bg-white/[0.04] rounded-xl" />)}
+          {[1,2,3].map(i => <div key={i} className="h-28 bg-[var(--upt-surface-light)] rounded-xl" />)}
         </div>
       </div>
     );
@@ -68,7 +70,7 @@ export default function TeacherOverview() {
       {/* ─── Analytics panels ────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8" style={{ animation: 'fade-up 0.4s ease-out 0.1s both' }}>
         {/* AI Activity */}
-        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07]">
+        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)]">
           <h2 className="text-[14px] font-semibold text-[var(--upt-text-primary)] mb-4 flex items-center gap-2">
             <Brain className="w-4 h-4 text-[var(--upt-gold)]" />
             Actividad del Asistente IA
@@ -82,7 +84,7 @@ export default function TeacherOverview() {
                 <span>Autonomía Estudiantil</span>
                 <span>{stats.independence_rate}%</span>
               </div>
-              <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--upt-surface-light)] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[var(--upt-gold)] transition-all duration-1000"
                   style={{ width: `${stats.independence_rate}%` }}
@@ -93,7 +95,7 @@ export default function TeacherOverview() {
         </div>
 
         {/* Recent students */}
-        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07]">
+        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)]">
           <h2 className="text-[14px] font-semibold text-[var(--upt-text-primary)] mb-4 flex items-center gap-2">
             <Clock className="w-4 h-4 text-[var(--upt-text-tertiary)]" />
             Actividad Reciente de Alumnos
@@ -106,8 +108,8 @@ export default function TeacherOverview() {
           ) : (
             <div className="space-y-2">
               {stats.recent_students.map((s, i) => (
-                <div key={i} className="flex items-center gap-3 py-2.5 px-3 bg-[var(--upt-bg-deep)] rounded-lg hover:bg-[var(--upt-surface-light)] transition-colors border border-white/[0.04]">
-                  <div className="w-7 h-7 rounded-md bg-[var(--upt-surface-light)] text-[var(--upt-text-secondary)] flex items-center justify-center font-bold text-xs shrink-0 border border-white/[0.07]">
+                <div key={i} className="flex items-center gap-3 py-2.5 px-3 bg-[var(--upt-bg-deep)] rounded-lg hover:bg-[var(--upt-surface-light)] transition-colors border border-[var(--upt-surface-border)]">
+                  <div className="w-7 h-7 rounded-md bg-[var(--upt-surface-light)] text-[var(--upt-text-secondary)] flex items-center justify-center font-bold text-xs shrink-0 border border-[var(--upt-surface-border)]">
                     {s.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -144,8 +146,8 @@ export default function TeacherOverview() {
 
 function MetricCard({ icon: Icon, label, value }) {
   return (
-    <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] flex items-start gap-4 hover:bg-[var(--upt-surface-light)] transition-colors">
-      <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center bg-white/[0.04] border border-white/[0.07]">
+    <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] flex items-start gap-4 hover:bg-[var(--upt-surface-light)] transition-colors">
+      <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center bg-[var(--upt-surface-light)] border border-[var(--upt-surface-border)]">
         <Icon size={17} className="text-[var(--upt-text-secondary)]" />
       </div>
       <div>
@@ -158,7 +160,7 @@ function MetricCard({ icon: Icon, label, value }) {
 
 function StatRow({ label, value, highlight }) {
   return (
-    <div className="flex justify-between items-center py-2 px-3 bg-[var(--upt-bg-deep)] rounded-lg border border-white/[0.04]">
+    <div className="flex justify-between items-center py-2 px-3 bg-[var(--upt-bg-deep)] rounded-lg border border-[var(--upt-surface-border)]">
       <span className="text-[13px] text-[var(--upt-text-tertiary)]">{label}</span>
       <span className={`text-base font-bold ${highlight ? 'text-[var(--upt-gold)]' : 'text-[var(--upt-text-primary)]'}`}>{value}</span>
     </div>
@@ -169,9 +171,9 @@ function QuickAction({ icon: Icon, label, desc, tab }) {
   return (
     <button
       onClick={() => window.dispatchEvent(new CustomEvent('alda:navigate', { detail: tab }))}
-      className="p-4 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] flex items-center gap-4 text-left transition-colors hover:bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/20 group cursor-pointer"
+      className="p-4 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] flex items-center gap-4 text-left transition-colors hover:bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/20 group cursor-pointer"
     >
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/[0.04] border border-white/[0.07] shrink-0">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[var(--upt-surface-light)] border border-[var(--upt-surface-border)] shrink-0">
         <Icon className="w-4 h-4 text-[var(--upt-text-secondary)]" />
       </div>
       <div className="flex-1 min-w-0">

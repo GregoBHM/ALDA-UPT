@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "161.132.4.49")
+DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_NAME = os.getenv("POSTGRES_DB", "alda_db")
 DB_USER = os.getenv("POSTGRES_USER", "alda_admin")
-DB_PASS = os.getenv("DB_PASSWORD", "&WV_txqNd&Bq9Ki^")
+DB_PASS = os.getenv("DB_PASSWORD", "")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
 SQLALCHEMY_DATABASE_URL = f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"

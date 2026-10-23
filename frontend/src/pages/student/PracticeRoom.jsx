@@ -17,7 +17,6 @@ const STORAGE_KEYS = {
 
 const DEFAULT_CODE = `#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 10; i++) {\n    std::cout << "Hola Mundo\\n";\n  }\n  return 0;\n}`;
 
-// Returns user-scoped storage keys so each account has its own private history
 function getUserStorageKeys() {
   try {
     const u = JSON.parse(sessionStorage.getItem('user') || '{}');
@@ -52,6 +51,9 @@ export default function PracticeRoom() {
   const [testResults, setTestResults] = useState(null);
   const [showTestResults, setShowTestResults] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [isPasted, setIsPasted] = useState(false);
+  const [evalCooldown, setEvalCooldown] = useState(0);
+  const cooldownRef = useRef(null);
 
   const [code, setCode] = useState(() => {
     return localStorage.getItem(STORAGE_KEYS.CODE) || DEFAULT_CODE;
@@ -114,6 +116,7 @@ export default function PracticeRoom() {
   useEffect(() => {
     return () => {
       if (wsRef.current) wsRef.current.close();
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
     };
   }, []);
 
@@ -126,19 +129,17 @@ export default function PracticeRoom() {
         wsRef.current.close();
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8200';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     const wsUrl = apiUrl.replace(/^http/, 'ws') + '/api/student/ws/compile';
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
-        const user = JSON.parse(sessionStorage.getItem('user'));
         ws.send(JSON.stringify({
             code: code,
             language: language,
-            laboratory_id: activeLabId || null,
-            user_id: user?.id || null
+            laboratory_id: activeLabId || null
         }));
     };
 
@@ -168,8 +169,17 @@ export default function PracticeRoom() {
       }
   };
 
+  const handleStopExecution = () => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    setIsExecuting(false);
+    setConsoleOutput(prev => [...prev, { type: 'system', text: '\n■ Ejecución detenida por el usuario.\n' }]);
+  };
+
   const handleRunTests = async () => {
-    if (!activeLabId || isTesting) return;
+    if (!activeLabId || isTesting || evalCooldown > 0) return;
     
     setIsTesting(true);
     setShowTestResults(true);
@@ -194,11 +204,22 @@ export default function PracticeRoom() {
         }
       }
     } catch (e) {
-      console.error(e);
-      toast.error('Error al ejecutar las pruebas');
-      setShowTestResults(false);
+      const msg = e?.message || '';
+      if (msg.includes('429') || msg.toLowerCase().includes('espera')) {
+        toast.error(msg, { icon: '⏳' });
+      } else {
+        toast.error('Error al ejecutar las pruebas');
+        setShowTestResults(false);
+      }
     } finally {
       setIsTesting(false);
+      setEvalCooldown(9);
+      cooldownRef.current = setInterval(() => {
+        setEvalCooldown(prev => {
+          if (prev <= 1) { clearInterval(cooldownRef.current); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
     }
   };
 
@@ -210,10 +231,11 @@ export default function PracticeRoom() {
     const next = !showAssistant;
     setShowAssistant(next);
     if (next && chatMessages.length === 0) {
+      const labContext = activeLab ? `Estoy aquí para ayudarte con "${activeLab.title}". ` : '';
       const welcome = [{
         id: 1,
         sender: 'ai',
-        text: '¡Hola! Estoy aquí para ayudarte. Ejecuta tu código y cuéntame qué dificultad tienes.'
+        text: `¡Hola! ${labContext}Ejecuta tu código y cuéntame qué dificultad tienes.`
       }];
       setChatMessages(welcome);
     }
@@ -240,24 +262,25 @@ export default function PracticeRoom() {
     setShowLabSelector(false);
     
     if (id !== '') {
-      setShowAssistant(false);
+      const lab = labs.find(l => l.id.toString() === id.toString());
+      if (lab?.is_exam) setShowAssistant(false);
     }
     
     toast.success(id === '' ? 'Entraste a Práctica Libre' : 'Laboratorio seleccionado');
   };
 
-  const activeLab = labs.find(l => l.id === activeLabId);
+  const activeLab = labs.find(l => l.id.toString() === activeLabId?.toString());
 
   return (
     <div className="absolute inset-0 flex flex-col bg-[var(--upt-bg)]">
-      <div className="h-10 sm:h-12 bg-[var(--upt-surface)] border-b border-white/[0.06] flex items-center px-2 sm:px-4 relative z-30 shrink-0 gap-1 sm:gap-0">
+      <div className="h-10 sm:h-12 bg-[var(--upt-surface)] border-b border-[var(--upt-surface-border)] flex items-center px-2 sm:px-4 relative z-30 shrink-0 gap-1 sm:gap-0">
         <button 
           onClick={() => setShowLabSelector(!showLabSelector)}
-          className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-[var(--upt-text-primary)] hover:bg-white/5 px-2 sm:px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-white/10 min-w-0"
+          className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-[var(--upt-text-primary)] hover:bg-[var(--upt-surface-light)] px-2 sm:px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-[var(--upt-surface-border)] min-w-0"
         >
           <BookOpen className="w-4 h-4 text-[var(--upt-gold)] shrink-0" />
           <span className="font-bold truncate max-w-[120px] sm:max-w-none">{activeLab ? activeLab.title : 'Lab Libre'}</span>
-          <ChevronDown className="w-4 h-4 text-white/40 shrink-0" />
+          <ChevronDown className="w-4 h-4 text-[var(--upt-text-tertiary)] shrink-0" />
         </button>
 
         {activeLab && (
@@ -271,13 +294,13 @@ export default function PracticeRoom() {
         )}
 
         {showLabSelector && (
-          <div className="absolute top-full left-0 sm:left-4 mt-1 w-[calc(100vw-1rem)] sm:w-80 bg-[var(--upt-surface)] border border-white/10 rounded-xl shadow-2xl py-2 z-50 max-h-[60vh] overflow-y-auto">
-            <div className="px-4 py-2 border-b border-white/5 mb-2">
+          <div className="absolute top-full left-0 sm:left-4 mt-1 w-[calc(100vw-1rem)] sm:w-80 bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] rounded-xl shadow-2xl py-2 z-50 max-h-[60vh] overflow-y-auto">
+            <div className="px-4 py-2 border-b border-[var(--upt-surface-border)] mb-2">
               <p className="text-xs font-bold text-[var(--upt-text-tertiary)] uppercase tracking-wider">Seleccionar Laboratorio</p>
             </div>
             <button 
               onClick={() => selectLab('')}
-              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 transition-colors ${!activeLabId ? 'bg-white/5 text-[var(--upt-gold)]' : 'text-white'}`}
+              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[var(--upt-surface-light)] transition-colors ${!activeLabId ? 'bg-[var(--upt-surface-light)] text-[var(--upt-gold)]' : 'text-[var(--upt-text-primary)]'}`}
             >
               <span className="font-bold block">Laboratorio Libre</span>
               <span className="text-xs opacity-60">Práctica sin evaluación</span>
@@ -286,7 +309,7 @@ export default function PracticeRoom() {
               <button 
                 key={lab.id}
                 onClick={() => selectLab(lab.id)}
-                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 transition-colors ${activeLabId === lab.id ? 'bg-white/5 text-[var(--upt-gold)]' : 'text-white'}`}
+                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[var(--upt-surface-light)] transition-colors ${activeLabId === lab.id ? 'bg-[var(--upt-surface-light)] text-[var(--upt-gold)]' : 'text-[var(--upt-text-primary)]'}`}
               >
                 <span className="font-bold block">{lab.title}</span>
                 <span className="text-xs opacity-60 block truncate">
@@ -302,21 +325,25 @@ export default function PracticeRoom() {
           <div className="flex items-center gap-3 ml-auto">
             <button
               onClick={handleRunTests}
-              disabled={isTesting}
+              disabled={isTesting || evalCooldown > 0}
               className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-[var(--upt-bg-deep)] hover:bg-[var(--upt-surface)] disabled:opacity-40 text-[var(--upt-gold)] border border-[var(--upt-gold)]/25 hover:border-[var(--upt-gold)]/50 rounded-md text-xs font-semibold transition-all cursor-pointer"
             >
               {isTesting
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 : <CheckSquare className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isTesting ? 'Evaluando...' : 'Evaluar Reto'}</span>
-              <span className="sm:hidden">{isTesting ? '...' : 'Evaluar'}</span>
+              <span className="hidden sm:inline">
+                {isTesting ? 'Evaluando...' : evalCooldown > 0 ? `Espera ${evalCooldown}s` : 'Evaluar Reto'}
+              </span>
+              <span className="sm:hidden">
+                {isTesting ? '...' : evalCooldown > 0 ? `${evalCooldown}s` : 'Evaluar'}
+              </span>
             </button>
           </div>
         )}
       </div>
 
       <div className="flex-1 flex overflow-hidden relative">
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden border-r border-white/[0.06]">
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden border-r border-[var(--upt-surface-border)]">
           <EditorPanel
             code={code}
             setCode={setCode}
@@ -324,17 +351,20 @@ export default function PracticeRoom() {
             onExecute={handleExecuteCode}
             onConsult={handleToggleAssistant}
             showAssistant={showAssistant}
-            isAiDisabled={!!activeLabId}
+            isAiDisabled={!!activeLab?.is_exam}
             language={language}
             setLanguage={handleLanguageChange}
             editorTheme={editorTheme}
             onToggleTheme={handleToggleTheme}
             onSave={handleSave}
+            onPasteDetected={() => setIsPasted(true)}
           />
           <ConsolePanel
             isExecuting={isExecuting}
             output={consoleOutput}
             onSendInput={sendConsoleInput}
+            onClear={() => setConsoleOutput([])}
+            onStop={handleStopExecution}
           />
         </div>
 
@@ -348,6 +378,8 @@ export default function PracticeRoom() {
               language={language}
               laboratoryId={activeLabId}
               consoleOutput={consoleOutput}
+              isPasted={isPasted}
+              onResetPaste={() => setIsPasted(false)}
             />
           </div>
         )}
@@ -360,13 +392,15 @@ export default function PracticeRoom() {
             allPassed={testResults?.all_passed}
             passedCount={testResults?.passed_count}
             totalCount={testResults?.total_count}
+            code={code}
+            language={language}
           />
         )}
 
         {showDescription && activeLab && (
           <div className="absolute inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-10 bg-[var(--upt-bg)]/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-2xl bg-[var(--upt-surface)] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] sm:max-h-full overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/2">
+            <div className="w-full max-w-2xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] rounded-2xl shadow-2xl flex flex-col max-h-[90vh] sm:max-h-full overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-[var(--upt-surface-border)] flex items-center justify-between bg-[var(--upt-surface-light)]/30">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-[var(--upt-gold)]/10 rounded-xl">
                     <BookOpen className="w-6 h-6 text-[var(--upt-gold)]" />
@@ -378,7 +412,7 @@ export default function PracticeRoom() {
                 </div>
                 <button 
                   onClick={() => setShowDescription(false)}
-                  className="p-2 hover:bg-white/5 rounded-full text-[var(--upt-text-tertiary)] hover:text-white transition-all"
+                  className="p-2 hover:bg-[var(--upt-surface-light)] rounded-full text-[var(--upt-text-tertiary)] hover:text-[var(--upt-text-primary)] transition-all"
                 >
                   <CloseIcon className="w-6 h-6" />
                 </button>
@@ -386,26 +420,26 @@ export default function PracticeRoom() {
               
               <div className="flex-1 overflow-y-auto p-8 space-y-6">
                 <div className="flex items-center gap-6">
-                  <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                  <div className="px-4 py-2 bg-[var(--upt-surface-light)] rounded-xl border border-[var(--upt-surface-border)]">
                     <p className="text-[10px] text-[var(--upt-text-tertiary)] uppercase font-black mb-1">Dificultad</p>
-                    <p className={`text-sm font-bold capitalize ${activeLab.difficulty === 'easy' ? 'text-emerald-400' : activeLab.difficulty === 'hard' ? 'text-rose-400' : 'text-amber-400'}`}>
+                    <p className={`text-sm font-bold capitalize ${activeLab.difficulty === 'easy' ? 'text-[var(--upt-success)]' : activeLab.difficulty === 'hard' ? 'text-[var(--upt-error)]' : 'text-[var(--upt-warning)]'}`}>
                       {activeLab.difficulty === 'easy' ? 'Principiante' : activeLab.difficulty === 'hard' ? 'Avanzado' : 'Intermedio'}
                     </p>
                   </div>
-                  <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                  <div className="px-4 py-2 bg-[var(--upt-surface-light)] rounded-xl border border-[var(--upt-surface-border)]">
                     <p className="text-[10px] text-[var(--upt-text-tertiary)] uppercase font-black mb-1">Docente</p>
-                    <p className="text-sm font-bold text-white">{activeLab.teacher_name}</p>
+                    <p className="text-sm font-bold text-[var(--upt-text-primary)]">{activeLab.teacher_name}</p>
                   </div>
                 </div>
 
-                <div className="prose prose-invert max-w-none">
+                <div className="prose max-w-none">
                   <div className="text-[var(--upt-text-secondary)] leading-relaxed whitespace-pre-wrap text-base">
                     {activeLab.description || "No hay una descripción detallada disponible para este laboratorio."}
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 border-t border-white/5 bg-white/2 flex justify-end">
+              <div className="p-6 border-t border-[var(--upt-surface-border)] bg-[var(--upt-surface-light)]/30 flex justify-end">
                 <button 
                   onClick={() => setShowDescription(false)}
                   className="px-8 py-3 bg-[var(--upt-gold)] text-[var(--upt-bg)] rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--upt-gold)]/20"

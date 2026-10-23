@@ -15,7 +15,9 @@ export default function AdminOverview() {
   const fetchOverview = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/admin/api-stats`, {
-        headers: { 'X-User-ID': currentUser.id }
+        credentials: 'include',
+        headers: { 'X-User-ID': currentUser.id },
+        signal: AbortSignal.timeout(8000)
       });
       if (res.ok) {
         setStats(await res.json());
@@ -62,7 +64,7 @@ export default function AdminOverview() {
             <button
               key={i}
               onClick={() => window.dispatchEvent(new CustomEvent('alda:navigate', { detail: action.tab }))}
-              className="p-4 rounded-xl border border-white/[0.07] bg-[var(--upt-surface)] flex items-center gap-4 text-left transition-colors hover:bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/20 group cursor-pointer"
+              className="p-4 rounded-xl border border-[var(--upt-surface-border)] bg-[var(--upt-surface)] flex items-center gap-4 text-left transition-colors hover:bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/20 group cursor-pointer"
             >
               <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[var(--upt-accent)]/10 border border-[var(--upt-accent)]/20 shrink-0">
                 <Icon className="w-4 h-4 text-[var(--upt-accent-light)]" />
@@ -78,7 +80,7 @@ export default function AdminOverview() {
       </div>
 
       {/* ─── Infra info ───────────────────────────────────────── */}
-      <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07]" style={{ animation: 'fade-up 0.4s ease-out 0.15s both' }}>
+      <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)]" style={{ animation: 'fade-up 0.4s ease-out 0.15s both' }}>
         <div className="flex items-center gap-2 mb-4">
           <Server className="w-4 h-4 text-[var(--upt-gold)]" />
           <h2 className="text-[14px] font-semibold text-[var(--upt-text-primary)]">Infraestructura</h2>
@@ -96,7 +98,7 @@ export default function AdminOverview() {
 
 function MetricCard({ icon: Icon, label, value, sub }) {
   return (
-    <div className="p-5 rounded-xl border border-white/[0.07] bg-[var(--upt-surface)] hover:bg-[var(--upt-surface-light)] transition-colors">
+    <div className="p-5 rounded-xl border border-[var(--upt-surface-border)] bg-[var(--upt-surface)] hover:bg-[var(--upt-surface-light)] transition-colors">
       <div className="flex items-center justify-between mb-4">
         <div className="w-9 h-9 rounded-lg bg-[var(--upt-accent)]/10 border border-[var(--upt-accent)]/20 flex items-center justify-center">
           <Icon className="w-4 h-4 text-[var(--upt-accent-light)]" />
@@ -110,7 +112,7 @@ function MetricCard({ icon: Icon, label, value, sub }) {
 
 function InfoBadge({ label, value }) {
   return (
-    <div className="py-3 px-3 bg-[var(--upt-bg-deep)] rounded-lg border border-white/[0.05]">
+    <div className="py-3 px-3 bg-[var(--upt-bg-deep)] rounded-lg border border-[var(--upt-surface-border)]">
       <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--upt-text-tertiary)] mb-1">{label}</p>
       <p className="text-[13px] font-semibold text-[var(--upt-text-primary)] font-mono">{value}</p>
     </div>

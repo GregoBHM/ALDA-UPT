@@ -67,7 +67,7 @@ export default function UserManagement() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--upt-text-tertiary)]" />
           <input type="text" placeholder="Buscar por nombre o correo..."
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-[var(--upt-surface)] border border-white/[0.07] rounded-lg py-2 pl-10 pr-4 text-sm text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 w-full md:w-72 transition-colors"
+            className="bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] rounded-lg py-2 pl-10 pr-4 text-sm text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 w-full md:w-72 transition-colors"
           />
         </div>
       </div>
@@ -80,11 +80,11 @@ export default function UserManagement() {
       </div>
 
       {/* Table */}
-      <div className="bg-[var(--upt-surface)] rounded-xl border border-white/[0.07] overflow-hidden">
+      <div className="bg-[var(--upt-surface)] rounded-xl border border-[var(--upt-surface-border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-white/[0.06] text-[11px] uppercase tracking-wider text-[var(--upt-text-tertiary)] font-semibold">
+              <tr className="border-b border-[var(--upt-surface-border)] text-[11px] uppercase tracking-wider text-[var(--upt-text-tertiary)] font-semibold">
                 <th className="px-5 py-3">Usuario</th>
                 <th className="px-5 py-3">Rol</th>
                 <th className="px-5 py-3">Estado</th>
@@ -92,15 +92,15 @@ export default function UserManagement() {
                 <th className="px-5 py-3 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-[var(--upt-surface-border)]">
               {isLoading ? (
                 Array(5).fill(0).map((_, i) => <LoadingRow key={i} />)
               ) : filteredUsers.map(user => (
-                <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                <tr key={user.id} className="hover:bg-[var(--upt-surface-light)]/40 transition-colors group">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       {user.avatar_url ? (
-                        <img src={user.avatar_url} className="w-8 h-8 rounded-md border border-white/[0.07]" alt="" />
+                        <img src={user.avatar_url} className="w-8 h-8 rounded-md border border-[var(--upt-surface-border)]" alt="" />
                       ) : (
                         <div className="w-8 h-8 rounded-md bg-[var(--upt-accent)]/10 border border-[var(--upt-accent)]/20 text-[var(--upt-accent)] flex items-center justify-center font-bold text-xs">
                           {user.name.charAt(0)}
@@ -120,8 +120,8 @@ export default function UserManagement() {
                       className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border outline-none cursor-pointer transition-colors focus:border-[var(--upt-gold)]/30
                         ${user.role === 'admin'   ? 'bg-[var(--upt-gold)]/10 text-[var(--upt-gold)] border-[var(--upt-gold)]/25' :
                           user.role === 'teacher'  ? 'bg-[var(--upt-accent)]/10 text-[var(--upt-accent-light)] border-[var(--upt-accent)]/20' :
-                                                    'bg-white/[0.04] text-[var(--upt-text-secondary)] border-white/[0.08]'}`}
-                      style={{ colorScheme: 'dark' }}
+                                                    'bg-[var(--upt-surface-light)] text-[var(--upt-text-secondary)] border-[var(--upt-surface-border)]'}`}
+                      style={{ colorScheme: 'inherit' }}
                     >
                       <option value="student">Estudiante</option>
                       <option value="teacher">Docente</option>
@@ -133,11 +133,11 @@ export default function UserManagement() {
                       disabled={user.id === currentUser.id}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border cursor-pointer bg-transparent disabled:opacity-30 transition-colors"
                       style={{
-                        color: user.is_active ? '#34d399' : '#fb7185',
-                        borderColor: user.is_active ? 'rgba(52,211,153,0.2)' : 'rgba(251,113,133,0.25)',
+                        color: user.is_active ? 'var(--upt-success)' : 'var(--upt-error)',
+                        borderColor: user.is_active ? 'color-mix(in srgb, var(--upt-success) 25%, transparent)' : 'color-mix(in srgb, var(--upt-error) 25%, transparent)',
                       }}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${user.is_active ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${user.is_active ? 'bg-[var(--upt-success)]' : 'bg-[var(--upt-error)]'}`} />
                       {user.is_active ? 'Activo' : 'Suspendido'}
                     </button>
                   </td>
@@ -149,15 +149,15 @@ export default function UserManagement() {
                   </td>
                   <td className="px-5 py-3.5 text-right relative">
                     <button onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
-                      className={`w-7 h-7 rounded-md inline-flex items-center justify-center transition-colors ${openMenuId === user.id ? 'bg-white/[0.08] text-[var(--upt-text-primary)]' : 'text-[var(--upt-text-tertiary)] hover:text-[var(--upt-text-primary)] hover:bg-white/[0.04]'}`}>
+                      className={`w-7 h-7 rounded-md inline-flex items-center justify-center transition-colors ${openMenuId === user.id ? 'bg-[var(--upt-surface-light)]/80 text-[var(--upt-text-primary)]' : 'text-[var(--upt-text-tertiary)] hover:text-[var(--upt-text-primary)] hover:bg-[var(--upt-surface-light)]'}`}>
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                     {openMenuId === user.id && (
-                      <div className="absolute right-5 top-12 w-40 bg-[var(--upt-bg-deep)] border border-white/[0.08] rounded-lg shadow-xl z-50 py-1">
+                      <div className="absolute right-5 top-12 w-40 bg-[var(--upt-bg-deep)] border border-[var(--upt-surface-border)] rounded-lg shadow-xl z-50 py-1">
                         <button onClick={() => { navigator.clipboard.writeText(user.id); toast.success('ID copiado'); setOpenMenuId(null); }}
-                          className="w-full text-left px-3.5 py-2 text-xs text-[var(--upt-text-secondary)] hover:bg-white/[0.04] transition-colors">Copiar ID</button>
+                          className="w-full text-left px-3.5 py-2 text-xs text-[var(--upt-text-secondary)] hover:bg-[var(--upt-surface-light)] transition-colors">Copiar ID</button>
                         <button disabled={user.id === currentUser.id} onClick={() => handleDeleteUser(user.id)}
-                          className="w-full text-left px-3.5 py-2 text-xs text-rose-400/70 hover:bg-rose-500/[0.06] hover:text-rose-400 transition-colors disabled:opacity-30">Eliminar Usuario</button>
+                          className="w-full text-left px-3.5 py-2 text-xs text-[var(--upt-error)]/70 hover:bg-[var(--upt-error)]/[0.06] hover:text-[var(--upt-error)] transition-colors disabled:opacity-30">Eliminar Usuario</button>
                       </div>
                     )}
                   </td>
@@ -167,7 +167,7 @@ export default function UserManagement() {
           </table>
           {!isLoading && filteredUsers.length === 0 && (
             <div className="py-16 text-center">
-              <Users className="w-8 h-8 text-white/[0.06] mx-auto mb-3" />
+              <Users className="w-8 h-8 text-[var(--upt-text-tertiary)]/10 mx-auto mb-3" />
               <p className="text-sm text-[var(--upt-text-tertiary)]">No se encontraron usuarios.</p>
             </div>
           )}
@@ -180,7 +180,7 @@ export default function UserManagement() {
 function StatCard({ icon: Icon, label, value, accent }) {
   const isGold = accent === 'gold';
   return (
-    <div className="p-4 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] flex items-center gap-3.5 hover:bg-[var(--upt-surface-light)] transition-colors">
+    <div className="p-4 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] flex items-center gap-3.5 hover:bg-[var(--upt-surface-light)] transition-colors">
       <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
         isGold ? 'bg-[var(--upt-gold)]/10 border-[var(--upt-gold)]/20' : 'bg-[var(--upt-accent)]/10 border-[var(--upt-accent)]/20'
       }`}>
@@ -197,11 +197,11 @@ function StatCard({ icon: Icon, label, value, accent }) {
 function LoadingRow() {
   return (
     <tr className="animate-pulse">
-      <td className="px-5 py-3.5"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-md bg-white/[0.04]" /><div className="space-y-1.5"><div className="h-3 w-24 bg-white/[0.04] rounded" /><div className="h-2 w-32 bg-white/[0.04] rounded" /></div></div></td>
-      <td className="px-5 py-3.5"><div className="h-6 w-20 bg-white/[0.04] rounded-md" /></td>
-      <td className="px-5 py-3.5"><div className="h-6 w-20 bg-white/[0.04] rounded-md" /></td>
-      <td className="px-5 py-3.5"><div className="h-3 w-16 bg-white/[0.04] rounded" /></td>
-      <td className="px-5 py-3.5 text-right"><div className="h-7 w-7 bg-white/[0.04] rounded-md ml-auto" /></td>
+      <td className="px-5 py-3.5"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-md bg-[var(--upt-surface-light)]" /><div className="space-y-1.5"><div className="h-3 w-24 bg-[var(--upt-surface-light)] rounded" /><div className="h-2 w-32 bg-[var(--upt-surface-light)] rounded" /></div></div></td>
+      <td className="px-5 py-3.5"><div className="h-6 w-20 bg-[var(--upt-surface-light)] rounded-md" /></td>
+      <td className="px-5 py-3.5"><div className="h-6 w-20 bg-[var(--upt-surface-light)] rounded-md" /></td>
+      <td className="px-5 py-3.5"><div className="h-3 w-16 bg-[var(--upt-surface-light)] rounded" /></td>
+      <td className="px-5 py-3.5 text-right"><div className="h-7 w-7 bg-[var(--upt-surface-light)] rounded-md ml-auto" /></td>
     </tr>
   );
 }

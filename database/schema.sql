@@ -42,6 +42,7 @@ CREATE TABLE test_cases (
     input_data TEXT NOT NULL,
     expected_output TEXT NOT NULL,
     is_hidden BOOLEAN DEFAULT false,
+    evaluation_type VARCHAR(20) DEFAULT 'exact',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

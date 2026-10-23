@@ -13,7 +13,7 @@ def get_chroma_client():
     global _chroma_client
     if _chroma_client is None:
         host = os.getenv("CHROMA_HOST", "localhost")
-        port = int(os.getenv("CHROMA_PORT", "8100"))
+        port = int(os.getenv("CHROMA_PORT", "8000"))
         _chroma_client = chromadb.HttpClient(host=host, port=port)
     return _chroma_client
 
@@ -49,13 +49,13 @@ def generate_embeddings(texts: list[str], api_key: str = None) -> list[list[floa
         all_embeddings = []
         for text in texts:
             result = client.models.embed_content(
-                model="text-embedding-004",
+                model="gemini-embedding-001",
                 contents=text
             )
             all_embeddings.append(result.embeddings[0].values)
         return all_embeddings
     except Exception as e:
-        print(f"Error generando embeddings: {e}")
+        print(f"[ALDA RAG] ❌ Error generando embeddings con gemini-embedding-001: {e}")
         return []
 
 

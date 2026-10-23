@@ -17,7 +17,8 @@ export default function SystemStatus() {
     const checkEndpoint = async (name, url, icon, description) => {
       const start = Date.now();
       try {
-        const res = await fetch(url, { 
+        const res = await fetch(url, {
+          credentials: 'include',
           headers: { 'X-User-ID': currentUser.id },
           signal: AbortSignal.timeout(5000)
         });
@@ -49,7 +50,7 @@ export default function SystemStatus() {
           <p className="text-[var(--upt-text-tertiary)] text-sm mt-1">Monitoreo en tiempo real de los servicios de ALDA.</p>
         </div>
         <button onClick={() => checkServices(false, true)} disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--upt-surface)] border border-white/[0.07] rounded-lg text-sm font-semibold text-[var(--upt-text-secondary)] hover:bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/20 transition-colors disabled:opacity-40 cursor-pointer">
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] rounded-lg text-sm font-semibold text-[var(--upt-text-secondary)] hover:bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/20 transition-colors disabled:opacity-40 cursor-pointer">
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Verificar
         </button>
       </div>
@@ -62,17 +63,17 @@ export default function SystemStatus() {
 
       <div className="space-y-2.5">
         {isLoading ? Array(3).fill(0).map((_, i) => (
-          <div key={i} className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] animate-pulse">
-            <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-lg bg-white/[0.04]" /><div className="flex-1 space-y-2"><div className="h-3.5 w-48 bg-white/[0.04] rounded" /><div className="h-3 w-72 bg-white/[0.04] rounded" /></div><div className="h-6 w-20 bg-white/[0.04] rounded-md" /></div>
+          <div key={i} className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] animate-pulse">
+            <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-lg bg-[var(--upt-surface-light)]" /><div className="flex-1 space-y-2"><div className="h-3.5 w-48 bg-[var(--upt-surface-light)] rounded" /><div className="h-3 w-72 bg-[var(--upt-surface-light)] rounded" /></div><div className="h-6 w-20 bg-[var(--upt-surface-light)] rounded-md" /></div>
           </div>
         )) : services.map((svc, i) => {
           const Icon = svc.icon;
-          const dotColor = svc.status === 'online' ? 'bg-emerald-400' : svc.status === 'degraded' ? 'bg-amber-400' : 'bg-rose-400';
-          const textColor = svc.status === 'online' ? 'text-emerald-400' : svc.status === 'degraded' ? 'text-amber-400' : 'text-rose-400';
-          const borderColor = svc.status === 'online' ? 'border-emerald-500/20' : svc.status === 'degraded' ? 'border-amber-500/20' : 'border-rose-500/20';
+          const dotColor = svc.status === 'online' ? 'bg-[var(--upt-success)]' : svc.status === 'degraded' ? 'bg-[var(--upt-warning)]' : 'bg-[var(--upt-error)]';
+          const textColor = svc.status === 'online' ? 'text-[var(--upt-success)]' : svc.status === 'degraded' ? 'text-[var(--upt-warning)]' : 'text-[var(--upt-error)]';
+          const borderColor = svc.status === 'online' ? 'border-[var(--upt-success)]/20' : svc.status === 'degraded' ? 'border-[var(--upt-warning)]/20' : 'border-[var(--upt-error)]/20';
           const statusLabel = svc.status === 'online' ? 'En Línea' : svc.status === 'degraded' ? 'Degradado' : 'Offline';
           return (
-            <div key={i} className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] hover:bg-[var(--upt-surface-light)] transition-colors">
+            <div key={i} className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] hover:bg-[var(--upt-surface-light)] transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--upt-accent)]/10 border border-[var(--upt-accent)]/20 shrink-0">
                   <Icon className="w-5 h-5 text-[var(--upt-accent-light)]" />
@@ -102,7 +103,7 @@ export default function SystemStatus() {
 
 function SummaryCard({ icon: Icon, label, value, small }) {
   return (
-    <div className="p-4 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] flex items-center gap-3.5">
+    <div className="p-4 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] flex items-center gap-3.5">
       <div className="w-9 h-9 rounded-lg bg-[var(--upt-accent)]/10 border border-[var(--upt-accent)]/20 flex items-center justify-center shrink-0">
         <Icon className="w-4 h-4 text-[var(--upt-accent-light)]" />
       </div>

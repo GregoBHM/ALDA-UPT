@@ -15,6 +15,7 @@ export default function Announcements() {
   const fetchAnnouncements = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/teacher/announcements`, {
+        credentials: 'include',
         headers: { 'X-User-ID': user.id },
       });
       if (res.ok) setAnnouncements(await res.json());
@@ -34,6 +35,7 @@ export default function Announcements() {
     try {
       const res = await fetch(`${API_BASE}/api/teacher/announcements`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-User-ID': user.id },
         body: JSON.stringify({ title: title.trim(), content: content.trim() }),
       });
@@ -53,6 +55,7 @@ export default function Announcements() {
     try {
       const res = await fetch(`${API_BASE}/api/teacher/announcements/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: { 'X-User-ID': user.id },
       });
       if (!res.ok) throw new Error();
@@ -126,7 +129,7 @@ export default function Announcements() {
         ) : (
           <div className="flex flex-col gap-2.5" style={{ animation: 'fade-up 0.3s ease-out 0.1s both' }}>
             {announcements.map(ann => (
-              <div key={ann.id} className="bg-[var(--upt-surface)] rounded-xl border border-[var(--upt-surface-border)] px-5 py-4 shadow-sm flex items-start justify-between gap-3.5 group hover:border-white/10 transition-colors">
+              <div key={ann.id} className="bg-[var(--upt-surface)] rounded-xl border border-[var(--upt-surface-border)] px-5 py-4 shadow-sm flex items-start justify-between gap-3.5 group hover:border-[var(--upt-surface-border)] transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-1.5">
                     <p className="text-sm font-bold text-[var(--upt-text-primary)]">{ann.title}</p>
@@ -138,7 +141,7 @@ export default function Announcements() {
                 </div>
                 <button
                   onClick={() => handleDelete(ann.id)}
-                  className="w-8 h-8 rounded-lg border-none bg-transparent cursor-pointer shrink-0 flex items-center justify-center text-[var(--upt-text-tertiary)] transition-all duration-150 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-400"
+                  className="w-8 h-8 rounded-lg border-none bg-transparent cursor-pointer shrink-0 flex items-center justify-center text-[var(--upt-text-tertiary)] transition-all duration-150 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-[var(--upt-error)]/10 hover:text-[var(--upt-error)]"
                 >
                   <Trash2 size={15} />
                 </button>

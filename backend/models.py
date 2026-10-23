@@ -65,6 +65,7 @@ class TestCase(Base):
     input_data = Column(Text, nullable=False)
     expected_output = Column(Text, nullable=False)
     is_hidden = Column(Boolean, default=False)
+    evaluation_type = Column(String(20), default="exact")  # exact | regex | ai_semantic
     created_at = Column(DateTime(timezone=True), default=datetime.datetime.now(datetime.timezone.utc))
 
     laboratory = relationship("Laboratory", back_populates="test_cases")

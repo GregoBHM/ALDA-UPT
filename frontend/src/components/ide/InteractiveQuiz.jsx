@@ -19,18 +19,18 @@ export default function InteractiveQuiz({ interaction }) {
   const answered = selected !== null;
 
   return (
-    <div className="mt-3 rounded-xl overflow-hidden border border-[var(--upt-gold)]/15 bg-[var(--upt-surface)]">
+    <div className="mt-3 rounded-xl overflow-hidden border border-[var(--upt-surface-border)] bg-[var(--upt-surface)] shadow-[var(--upt-shadow-sm)]">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--upt-gold)]/10">
-        <HelpCircle className="w-3.5 h-3.5 text-[var(--upt-gold)]/60 shrink-0" />
-        <p className="text-[11px] font-semibold text-[var(--upt-gold)]/70 uppercase tracking-wider">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--upt-surface-border)] bg-[var(--upt-surface-light)]">
+        <HelpCircle className="w-4 h-4 text-[var(--upt-gold)] shrink-0" />
+        <p className="text-[11px] font-bold text-[var(--upt-text-secondary)] uppercase tracking-wider">
           Reflexiona
         </p>
       </div>
 
       {/* Question */}
-      <div className="px-4 pt-3 pb-2">
-        <p className="text-[13px] font-medium text-[var(--upt-text-primary)] leading-relaxed">
+      <div className="px-4 pt-4 pb-3">
+        <p className="text-[14px] font-medium text-[var(--upt-text-primary)] leading-relaxed">
           {question}
         </p>
       </div>
@@ -38,18 +38,18 @@ export default function InteractiveQuiz({ interaction }) {
       {/* Options */}
       <div className="px-4 pb-4 flex flex-col gap-2">
         {options.map((option, idx) => {
-          let style = 'border-white/[0.07] bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/25 hover:text-[var(--upt-text-primary)] cursor-pointer text-[var(--upt-text-secondary)]';
+          let style = 'border-[var(--upt-surface-border)] bg-[var(--upt-surface-light)] hover:border-[var(--upt-gold)]/40 hover:text-[var(--upt-text-primary)] cursor-pointer text-[var(--upt-text-secondary)]';
           let icon = null;
 
           if (answered) {
             if (idx === correct_index) {
-              style = 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-300 cursor-default';
-              icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />;
+              style = 'border-[var(--upt-success)]/40 bg-[var(--upt-success)]/10 text-[var(--upt-success)] cursor-default font-bold';
+              icon = <CheckCircle2 className="w-4 h-4 text-[var(--upt-success)] shrink-0" />;
             } else if (idx === selected && selected !== correct_index) {
-              style = 'border-rose-500/30 bg-rose-500/[0.06] text-rose-400 cursor-default';
-              icon = <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />;
+              style = 'border-[var(--upt-error)]/40 bg-[var(--upt-error)]/10 text-[var(--upt-error)] cursor-default font-bold';
+              icon = <XCircle className="w-4 h-4 text-[var(--upt-error)] shrink-0" />;
             } else {
-              style = 'border-white/[0.04] bg-transparent opacity-40 cursor-default text-[var(--upt-text-tertiary)]';
+              style = 'border-[var(--upt-surface-border)] bg-transparent opacity-50 cursor-default text-[var(--upt-text-tertiary)]';
             }
           }
 
@@ -57,12 +57,12 @@ export default function InteractiveQuiz({ interaction }) {
             <button
               key={idx}
               onClick={() => handleSelect(idx)}
-              className={`w-full flex items-center gap-3 text-left px-3 py-2.5 rounded-lg border text-[12px] font-medium transition-colors ${style}`}
+              className={`w-full flex items-center gap-3 text-left px-3 py-3 rounded-lg border text-[13px] font-medium transition-colors ${style}`}
             >
-              <span className={`w-5 h-5 shrink-0 rounded-md border flex items-center justify-center text-[10px] font-bold ${
-                answered && idx === correct_index ? 'border-emerald-500/50 text-emerald-400' :
-                answered && idx === selected && selected !== correct_index ? 'border-rose-500/50 text-rose-400' :
-                'border-white/20 text-[var(--upt-text-tertiary)]'
+              <span className={`w-6 h-6 shrink-0 rounded-md border flex items-center justify-center text-[11px] font-bold bg-[var(--upt-bg)] ${
+                answered && idx === correct_index ? 'border-[var(--upt-success)]/50 text-[var(--upt-success)]' :
+                answered && idx === selected && selected !== correct_index ? 'border-[var(--upt-error)]/50 text-[var(--upt-error)]' :
+                'border-[var(--upt-surface-border)] text-[var(--upt-text-tertiary)]'
               }`}>
                 {String.fromCharCode(65 + idx)}
               </span>
@@ -75,12 +75,14 @@ export default function InteractiveQuiz({ interaction }) {
 
       {/* Explanation */}
       {showExplanation && (
-        <div className={`mx-4 mb-4 px-3 py-2.5 rounded-lg border text-[12px] leading-relaxed ${
+        <div className={`mx-4 mb-4 px-4 py-3 rounded-xl border text-[13px] leading-relaxed shadow-[var(--upt-shadow-sm)] ${
           isCorrect
-            ? 'bg-emerald-500/[0.06] border-emerald-500/20 text-emerald-300'
-            : 'bg-[var(--upt-gold)]/[0.06] border-[var(--upt-gold)]/20 text-[var(--upt-gold)]/80'
+            ? 'bg-[var(--upt-success)]/10 border-[var(--upt-success)]/30 text-[var(--upt-success)]'
+            : 'bg-[var(--upt-surface-light)] border-[var(--upt-gold)]/30 text-[var(--upt-text-secondary)]'
         }`}>
-          <span className="font-semibold mr-1">{isCorrect ? '✓ Correcto.' : '→ Pista:'}</span>
+          <span className={`font-bold mr-2 ${isCorrect ? 'text-[var(--upt-success)]' : 'text-[var(--upt-gold)]'}`}>
+            {isCorrect ? '✓ Correcto.' : '→ Pista:'}
+          </span>
           {explanation}
         </div>
       )}

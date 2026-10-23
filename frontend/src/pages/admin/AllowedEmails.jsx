@@ -56,7 +56,7 @@ export default function AllowedEmails() {
       <div className="p-4 sm:p-6 lg:p-8 max-w-[860px] mx-auto">
 
         <div className="flex items-center gap-3 mb-2" style={{ animation: 'fade-up 0.4s ease-out' }}>
-          <div className="w-10 h-10 rounded-lg bg-[var(--upt-surface)] border border-white/[0.07] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] flex items-center justify-center">
             <ShieldCheck size={18} className="text-[var(--upt-gold)]" />
           </div>
           <div>
@@ -72,7 +72,7 @@ export default function AllowedEmails() {
           </p>
         </div>
 
-        <form onSubmit={handleAdd} className="bg-[var(--upt-surface)] rounded-xl border border-white/[0.07] p-5 mb-6" style={{ animation: 'fade-up 0.4s ease-out 0.1s both' }}>
+        <form onSubmit={handleAdd} className="bg-[var(--upt-surface)] rounded-xl border border-[var(--upt-surface-border)] p-5 mb-6" style={{ animation: 'fade-up 0.4s ease-out 0.1s both' }}>
           <p className="text-[11px] font-semibold text-[var(--upt-text-tertiary)] uppercase tracking-wider mb-3">Añadir correo</p>
           <div className="flex gap-2.5 flex-wrap">
             <div className="flex-[2] min-w-[220px] relative">
@@ -115,7 +115,7 @@ export default function AllowedEmails() {
             {entries.map((entry, i) => (
               <div
                 key={entry.email}
-                className={`flex items-center justify-between px-5 py-3.5 gap-3 group hover:bg-white/[0.02] transition-colors ${
+                className={`flex items-center justify-between px-5 py-3.5 gap-3 group hover:bg-[var(--upt-surface-light)]/40 transition-colors ${
                   i < entries.length - 1 ? 'border-b border-[var(--upt-surface-border)]' : ''
                 }`}
               >
@@ -132,7 +132,7 @@ export default function AllowedEmails() {
                 </div>
                 <button
                   onClick={() => handleRemove(entry.email)}
-                  className="w-8 h-8 rounded-lg border-none bg-transparent cursor-pointer shrink-0 flex items-center justify-center text-[var(--upt-text-tertiary)] transition-all duration-150 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-400"
+                  className="w-8 h-8 rounded-lg border-none bg-transparent cursor-pointer shrink-0 flex items-center justify-center text-[var(--upt-text-tertiary)] transition-all duration-150 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-[var(--upt-error)]/10 hover:text-[var(--upt-error)]"
                 >
                   <Trash2 size={15} />
                 </button>

@@ -1,0 +1,129 @@
+services:
+  db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: alda_db
+      POSTGRES_USER: alda_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD in Dokploy}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - alda_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alda_admin -d alda_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  chroma:
+    image: chromadb/chroma:1.5.9
+    restart: unless-stopped
+    environment:
+      IS_PERSISTENT: "TRUE"
+    volumes:
+      - chroma_data:/chroma/chroma
+    expose:
+      - "8000"
+    networks:
+      - alda_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    volumes:
+      # Required by the code-execution feature. See the deployment audit.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Nested compiler containers need this path visible on the host and backend.
+      - /tmp/alda-sandbox:/tmp/alda-sandbox
+      - uploads_data:/app/uploads
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      POSTGRES_DB: alda_db
+      POSTGRES_USER: alda_admin
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD in Dokploy}
+      CHROMA_HOST: chroma
+      CHROMA_PORT: "8000"
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:?Define VITE_GOOGLE_CLIENT_ID in Dokploy}
+      SESSION_SECRET: ${SESSION_SECRET:?Define SESSION_SECRET in Dokploy}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-8}
+      COOKIE_SECURE: "true"
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://alda-upt.sytes.net}
+      SANDBOX_DIR: /tmp/alda-sandbox
+    expose:
+      - "8000"
+    networks:
+      - alda_network
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alda-backend.rule=Host(`alda-upt.sytes.net`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.alda-backend.entrypoints=websecure"
+      - "traefik.http.routers.alda-backend.tls=true"
+      - "traefik.http.routers.alda-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.alda-backend.loadbalancer.server.port=8000"
+      - "traefik.docker.network=dokploy-network"
+    depends_on:
+      db:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:?Define VITE_GOOGLE_CLIENT_ID in Dokploy}
+        VITE_API_URL: ${VITE_API_URL:-https://alda-upt.sytes.net}
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - alda_network
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alda-frontend.rule=Host(`alda-upt.sytes.net`)"
+      - "traefik.http.routers.alda-frontend.entrypoints=websecure"
+      - "traefik.http.routers.alda-frontend.tls=true"
+      - "traefik.http.routers.alda-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.alda-frontend.loadbalancer.server.port=80"
+      - "traefik.docker.network=dokploy-network"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  chroma_data:
+  uploads_data:
+
+networks:
+  alda_network:
+    driver: bridge
+  dokploy-network:
+    external: true

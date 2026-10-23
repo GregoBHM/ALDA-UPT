@@ -17,9 +17,10 @@ export default function ApiConsumption() {
     if (!isPolling) setIsLoading(true);
     try {
       const headers = { 'X-User-ID': currentUser.id };
+      const sig = AbortSignal.timeout(8000);
       const [statsRes, settingsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/api-stats`, { headers }),
-        fetch(`${API_BASE}/api/admin/settings`, { headers })
+        fetch(`${API_BASE}/api/admin/api-stats`, { credentials: 'include', headers, signal: sig }),
+        fetch(`${API_BASE}/api/admin/settings`, { credentials: 'include', headers, signal: sig })
       ]);
       if (statsRes.ok) setStats(await statsRes.json());
       if (settingsRes.ok && !isPolling) {
@@ -35,7 +36,7 @@ export default function ApiConsumption() {
     setIsSaving(true);
     try {
       const res = await fetch(`${API_BASE}/api/admin/settings`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-ID': currentUser.id }, body: JSON.stringify(settings)
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-User-ID': currentUser.id }, body: JSON.stringify(settings)
       });
       if (res.ok) { toast.success('Configuración actualizada'); fetchData(); } else { toast.error('Error al guardar'); }
     } catch { toast.error('Fallo de conexión'); } finally { setIsSaving(false); }
@@ -45,8 +46,8 @@ export default function ApiConsumption() {
     return (
       <div className="p-6 lg:p-8 h-full">
         <div className="animate-pulse space-y-6">
-          <div className="h-7 w-56 bg-white/[0.04] rounded" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-white/[0.04] rounded-xl" />)}</div>
+          <div className="h-7 w-56 bg-[var(--upt-surface-light)] rounded" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-[var(--upt-surface-light)] rounded-xl" />)}</div>
         </div>
       </div>
     );
@@ -70,7 +71,7 @@ export default function ApiConsumption() {
         {metrics.map((m, i) => {
           const Icon = m.icon;
           return (
-            <div key={i} className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07] hover:bg-[var(--upt-surface-light)] transition-colors">
+            <div key={i} className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] hover:bg-[var(--upt-surface-light)] transition-colors">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-9 h-9 rounded-lg bg-[var(--upt-accent)]/10 border border-[var(--upt-accent)]/20 flex items-center justify-center">
                   <Icon className="w-4 h-4 text-[var(--upt-accent-light)]" />
@@ -86,7 +87,7 @@ export default function ApiConsumption() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* API Keys form */}
-        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07]">
+        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)]">
           <div className="flex items-center gap-2 mb-5">
             <Key className="w-4 h-4 text-[var(--upt-gold)]" />
             <h2 className="text-[14px] font-semibold text-[var(--upt-text-primary)]">Gestión de API Keys</h2>
@@ -96,19 +97,19 @@ export default function ApiConsumption() {
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--upt-text-tertiary)] mb-1.5">Google Gemini API Key</label>
               <input type="password" value={settings.gemini_key} onChange={(e) => setSettings({...settings, gemini_key: e.target.value})} placeholder="AIzaSy..."
-                className="w-full bg-[var(--upt-bg-deep)] border border-white/[0.07] rounded-lg py-2.5 px-3.5 text-sm text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 transition-colors font-mono" />
+                className="w-full bg-[var(--upt-bg-deep)] border border-[var(--upt-surface-border)] rounded-lg py-2.5 px-3.5 text-sm text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 transition-colors font-mono" />
               <p className="text-[10px] text-[var(--upt-text-tertiary)] mt-1">Modelo principal gemini-2.5-flash y vectorización.</p>
             </div>
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--upt-text-tertiary)] mb-1.5">OpenAI API Key (Fallback)</label>
               <input type="password" value={settings.openai_key} onChange={(e) => setSettings({...settings, openai_key: e.target.value})} placeholder="sk-proj-..."
-                className="w-full bg-[var(--upt-bg-deep)] border border-white/[0.07] rounded-lg py-2.5 px-3.5 text-sm text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 transition-colors font-mono" />
+                className="w-full bg-[var(--upt-bg-deep)] border border-[var(--upt-surface-border)] rounded-lg py-2.5 px-3.5 text-sm text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 transition-colors font-mono" />
               <p className="text-[10px] text-[var(--upt-text-tertiary)] mt-1">Respaldo en caso de interrupción de Google.</p>
             </div>
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--upt-text-tertiary)] mb-1.5">Motor Preferido</label>
               <select value={settings.active_model} onChange={(e) => setSettings({...settings, active_model: e.target.value})}
-                className="w-full bg-[var(--upt-bg-deep)] border border-white/[0.07] rounded-lg py-2.5 px-3.5 text-sm font-semibold text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 cursor-pointer" style={{ colorScheme: 'dark' }}>
+                className="w-full bg-[var(--upt-bg-deep)] border border-[var(--upt-surface-border)] rounded-lg py-2.5 px-3.5 text-sm font-semibold text-[var(--upt-text-primary)] focus:outline-none focus:border-[var(--upt-gold)]/40 cursor-pointer" style={{ colorScheme: 'inherit' }}>
                 <optgroup label="Modelos Gemini (Google)" className="bg-[var(--upt-surface)] font-bold">
                   <option value="gemini-3-pro" className="font-normal">Gemini 3 Pro / 3.1 Pro</option>
                   <option value="gemini-3-flash" className="font-normal">Gemini 3 Flash / 3.1 Flash</option>
@@ -134,7 +135,7 @@ export default function ApiConsumption() {
         </div>
 
         {/* Production environment */}
-        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-white/[0.07]">
+        <div className="p-5 rounded-xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)]">
           <div className="flex items-center gap-2 mb-5">
             <Server className="w-4 h-4 text-[var(--upt-gold)]" />
             <h2 className="text-[14px] font-semibold text-[var(--upt-text-primary)]">Entorno de Producción</h2>
@@ -143,10 +144,10 @@ export default function ApiConsumption() {
             <EnvRow label="Timeout de Ejecución" value="10s" />
             <EnvRow label="Base de Datos Principal" value="PostgreSQL 15" />
             <EnvRow label="Base de Datos Vectorial" value="ChromaDB" />
-            <div className="flex justify-between items-center py-2.5 px-3.5 bg-[var(--upt-bg-deep)] rounded-lg border border-white/[0.05]">
+            <div className="flex justify-between items-center py-2.5 px-3.5 bg-[var(--upt-bg-deep)] rounded-lg border border-[var(--upt-surface-border)]">
               <span className="text-[13px] text-[var(--upt-text-tertiary)]">Estado de Compiladores</span>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Activo
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[var(--upt-success)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--upt-success)]" /> Activo
               </span>
             </div>
           </div>
@@ -158,7 +159,7 @@ export default function ApiConsumption() {
 
 function EnvRow({ label, value }) {
   return (
-    <div className="flex justify-between items-center py-2.5 px-3.5 bg-[var(--upt-bg-deep)] rounded-lg border border-white/[0.05]">
+    <div className="flex justify-between items-center py-2.5 px-3.5 bg-[var(--upt-bg-deep)] rounded-lg border border-[var(--upt-surface-border)]">
       <span className="text-[13px] text-[var(--upt-text-tertiary)]">{label}</span>
       <span className="text-[13px] font-semibold text-[var(--upt-text-primary)] font-mono">{value}</span>
     </div>

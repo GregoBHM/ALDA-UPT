@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/ide/Sidebar';
-import { LogOut, Bell, Megaphone, X, Menu } from 'lucide-react';
+import { LogOut, Bell, Megaphone, X, Menu, AlertTriangle } from 'lucide-react';
+import ThemeToggle from '../components/ui/ThemeToggle';
+import { useTheme } from '../hooks/useTheme';
+import ErrorBoundary from '../components/ui/ErrorBoundary';
+import { authLogout, syncMe, getAnnouncements } from '../api';
 import SmartOverview from './SmartOverview';
 import PracticeRoom from './student/PracticeRoom';
 import ChallengesCatalog from './student/ChallengesCatalog';
@@ -17,7 +21,6 @@ import ApiConsumption from './admin/ApiConsumption';
 import AuditLogs from './admin/AuditLogs';
 import AllowedEmails from './admin/AllowedEmails';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const VIEWS = {
   overview: SmartOverview,
@@ -38,13 +41,16 @@ const VIEWS = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState(
     () => sessionStorage.getItem('alda_active_tab') || 'overview'
   );
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+  const [showSessionWarning, setShowSessionWarning] = useState(false);
+  const sessionTimerRef = useRef(null);
+  const sessionWarnRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [readIds, setReadIds] = useState(() => {
@@ -64,42 +70,27 @@ export default function Dashboard() {
 
     const syncUser = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/me`, {
-          headers: { 'X-User-ID': currentUser.id }
-        });
-        if (res.ok) {
-          const freshData = await res.json();
-          if (freshData.role !== currentUser.role || !freshData.is_active) {
-            if (!freshData.is_active) {
-              handleLogout();
-              return;
-            }
-            sessionStorage.setItem('user', JSON.stringify(freshData));
-            setUser(freshData);
-          }
+        const freshData = await syncMe(currentUser.id);
+        if (freshData.role !== currentUser.role || !freshData.is_active) {
+          if (!freshData.is_active) { handleLogout(); return; }
+          sessionStorage.setItem('user', JSON.stringify(freshData));
+          setUser(freshData);
         }
-      } catch (err) {
-      }
+      } catch {}
     };
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/student/announcements`, {
-          headers: { 'X-User-ID': currentUser.id }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setNotifications(Array.isArray(data) ? data : []);
-        }
-      } catch {
-      }
+        const data = await getAnnouncements(currentUser.id);
+        setNotifications(Array.isArray(data) ? data : []);
+      } catch {}
     };
 
     syncUser();
     fetchNotifications();
     const intervalId = setInterval(syncUser, 15000);
     const notifInterval = setInterval(fetchNotifications, 30000);
-    
+
     return () => {
       clearInterval(intervalId);
       clearInterval(notifInterval);
@@ -113,25 +104,24 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    let timer;
-    const resetTimer = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        handleLogout();
-      }, 1800000);
+    const WARNING_MS = 1800000 - 120000; // aviso 2 min antes
+    const LOGOUT_MS  = 1800000;
+
+    const resetTimers = () => {
+      setShowSessionWarning(false);
+      clearTimeout(sessionWarnRef.current);
+      clearTimeout(sessionTimerRef.current);
+      sessionWarnRef.current  = setTimeout(() => setShowSessionWarning(true), WARNING_MS);
+      sessionTimerRef.current = setTimeout(() => handleLogout(), LOGOUT_MS);
     };
 
-    window.addEventListener('mousemove', resetTimer);
-    window.addEventListener('keydown', resetTimer);
-    window.addEventListener('click', resetTimer);
-
-    resetTimer();
-
+    const events = ['mousemove', 'keydown', 'click'];
+    events.forEach(ev => window.addEventListener(ev, resetTimers));
+    resetTimers();
     return () => {
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('click', resetTimer);
-      clearTimeout(timer);
+      events.forEach(ev => window.removeEventListener(ev, resetTimers));
+      clearTimeout(sessionWarnRef.current);
+      clearTimeout(sessionTimerRef.current);
     };
   }, []);
 
@@ -151,9 +141,8 @@ export default function Dashboard() {
     setShowMobileSidebar(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoggingOut(true);
-    // Clear all user-specific localStorage data for privacy
     try {
       const u = JSON.parse(sessionStorage.getItem('user') || '{}');
       const uid = u.id || '';
@@ -167,6 +156,7 @@ export default function Dashboard() {
       ];
       keysToRemove.forEach(k => localStorage.removeItem(k));
     } catch {}
+    try { await authLogout(); } catch {}
     sessionStorage.clear();
     setTimeout(() => navigate('/'), 800);
   };
@@ -179,9 +169,7 @@ export default function Dashboard() {
 
   const toggleNotifPanel = () => {
     setShowNotifPanel(prev => !prev);
-    if (!showNotifPanel) {
-      markAllRead();
-    }
+    if (!showNotifPanel) markAllRead();
   };
 
   const unreadCount = notifications.filter(n => !readIds.has(n.id || n.title)).length;
@@ -191,56 +179,61 @@ export default function Dashboard() {
   const ActiveView = VIEWS[activeTab] || SmartOverview;
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden bg-[var(--upt-bg)] font-[var(--font-sans)]">
-      {/* Logout overlay */}
+    <div className="h-screen w-full flex flex-col overflow-hidden bg-[var(--upt-bg)]">
       {isLoggingOut && (
-        <div className="fixed inset-0 z-[200] bg-[var(--upt-bg)]/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
-          <div className="w-8 h-8 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
-          <p className="text-sm text-zinc-400 font-medium">Cerrando sesión...</p>
+        <div className="fixed inset-0 z-[200] bg-[var(--upt-bg)]/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+          <div className="w-8 h-8 border-2 border-[var(--upt-surface-border)] border-t-[var(--upt-accent-light)] rounded-full animate-spin" />
+          <p className="text-sm text-[var(--upt-text-secondary)] font-medium">Cerrando sesión...</p>
         </div>
       )}
-      <header className="h-14 bg-[var(--upt-sidebar-bg)] border-b border-[var(--upt-sidebar-border)] flex items-center justify-between px-3 sm:px-6 shrink-0 z-30 shadow-[0_1px_0_rgba(255,255,255,0.03)]">
+
+      <header className="h-14 bg-[var(--upt-sidebar-bg)] border-b border-[var(--upt-sidebar-border)] flex items-center justify-between px-3 sm:px-6 shrink-0 z-30">
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border-none bg-transparent text-white/50 cursor-pointer transition-all hover:text-white/80 hover:bg-white/[0.05]"
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl border-none bg-transparent text-[var(--upt-sidebar-text)] cursor-pointer transition-all hover:text-[var(--upt-sidebar-text-active)] hover:bg-[var(--upt-sidebar-item-hover-bg)]"
           >
             <Menu size={20} />
           </button>
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[var(--upt-gold)]/10 border border-[var(--upt-gold)]/20">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[var(--upt-gold)]/10 border border-[var(--upt-gold)]/25">
             <span className="text-[var(--upt-gold)] font-bold text-[12px] tracking-[0.05em]">ALDA</span>
           </div>
-          <div className="hidden sm:block w-px h-4 bg-white/[0.08]" />
-          <span className="hidden lg:block text-white/30 text-[13px] font-medium">
+          <div className="hidden sm:block w-px h-4 bg-[var(--upt-sidebar-border)]" />
+          <span className="hidden lg:block text-[var(--upt-sidebar-text)] text-[13px] font-medium">
             Plataforma Educativa · EPIS-UPT
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+
           <div className="relative" ref={notifRef}>
             <button
               onClick={toggleNotifPanel}
-              className="relative flex items-center justify-center w-9 h-9 rounded-lg border-none bg-transparent text-white/35 cursor-pointer transition-all duration-200 hover:text-white/80 hover:bg-white/[0.05]"
+              className="relative flex items-center justify-center w-9 h-9 rounded-xl border border-[var(--upt-sidebar-border)] bg-[var(--upt-sidebar-item-hover-bg)] text-[var(--upt-sidebar-text)] cursor-pointer transition-all duration-200 hover:text-[var(--upt-sidebar-text-active)] hover:bg-[var(--upt-sidebar-item-active-bg)]"
               title="Notificaciones"
             >
-              <Bell size={17} />
+              <Bell size={16} />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-rose-500 rounded-full border-2 border-[var(--upt-sidebar-bg)]">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-[var(--upt-error)] rounded-full border-2 border-[var(--upt-sidebar-bg)]">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
 
             {showNotifPanel && (
-              <div className="absolute right-0 top-12 w-[calc(100vw-2rem)] sm:w-80 bg-[var(--upt-surface)] border border-white/[0.08] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] z-50 overflow-hidden" style={{ animation: 'scale-in 0.15s ease-out' }}>
-                <div className="px-4 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
+              <div
+                className="absolute right-0 top-12 w-[calc(100vw-2rem)] sm:w-80 bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] rounded-2xl shadow-[var(--upt-shadow-lg)] z-50 overflow-hidden"
+                style={{ animation: 'scale-in 0.15s ease-out' }}
+              >
+                <div className="px-4 py-3.5 border-b border-[var(--upt-surface-border)] flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Bell size={14} className="text-[var(--upt-gold)]" />
                     <span className="text-[13px] font-bold text-[var(--upt-text-primary)]">Notificaciones</span>
                   </div>
                   <button
                     onClick={() => setShowNotifPanel(false)}
-                    className="p-1 rounded-md bg-transparent border-none text-white/30 hover:text-white/70 hover:bg-white/[0.05] cursor-pointer transition-all"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-transparent border-none text-[var(--upt-text-tertiary)] hover:text-[var(--upt-text-primary)] hover:bg-[var(--upt-surface-light)] cursor-pointer transition-all"
                   >
                     <X size={14} />
                   </button>
@@ -249,21 +242,21 @@ export default function Dashboard() {
                 <div className="max-h-80 overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="py-12 text-center">
-                      <Bell size={24} className="text-white/[0.06] mx-auto mb-3" />
-                      <p className="text-[13px] text-[var(--upt-text-tertiary)]">Sin notificaciones</p>
+                      <Bell size={28} className="text-[var(--upt-text-tertiary)] mx-auto mb-3 opacity-50" />
+                      <p className="text-[13px] text-[var(--upt-text-secondary)]">Sin notificaciones</p>
                     </div>
                   ) : (
                     notifications.map((notif, i) => (
-                      <div key={notif.id || i} className="relative px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--upt-gold)]/40 rounded-r-full" />
+                      <div key={notif.id || i} className="relative px-4 py-3.5 border-b border-[var(--upt-surface-border)] hover:bg-[var(--upt-surface-light)] transition-colors">
+                        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--upt-gold)] rounded-r-full opacity-60" />
                         <div className="flex items-start gap-3 pl-1">
-                          <div className="w-7 h-7 rounded-lg shrink-0 bg-[var(--upt-gold)]/[0.08] border border-[var(--upt-gold)]/15 flex items-center justify-center mt-0.5">
-                            <Megaphone size={12} className="text-[var(--upt-gold)]" />
+                          <div className="w-8 h-8 rounded-xl shrink-0 bg-[var(--upt-gold)]/10 border border-[var(--upt-gold)]/20 flex items-center justify-center mt-0.5">
+                            <Megaphone size={13} className="text-[var(--upt-gold)]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[12px] font-bold text-[var(--upt-text-primary)] mb-0.5 truncate">{notif.title}</p>
-                            <p className="text-[11px] text-[var(--upt-text-tertiary)] leading-relaxed line-clamp-2">{notif.content}</p>
-                            <span className="text-[10px] text-white/20 mt-1 block">
+                            <p className="text-[11px] text-[var(--upt-text-secondary)] leading-relaxed line-clamp-2">{notif.content}</p>
+                            <span className="text-[11px] text-[var(--upt-text-tertiary)] mt-1 block">
                               {notif.created_at ? new Date(notif.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }) : ''}
                             </span>
                           </div>
@@ -274,26 +267,29 @@ export default function Dashboard() {
                 </div>
 
                 {notifications.length > 0 && (
-                  <div className="px-4 py-2.5 border-t border-white/[0.06] bg-white/[0.01]">
-                    <p className="text-[10px] text-white/20 text-center">{notifications.length} anuncio{notifications.length !== 1 ? 's' : ''}</p>
+                  <div className="px-4 py-2.5 border-t border-[var(--upt-surface-border)] bg-[var(--upt-surface-light)]">
+                    <p className="text-[11px] text-[var(--upt-text-tertiary)] text-center">
+                      {notifications.length} anuncio{notifications.length !== 1 ? 's' : ''}
+                    </p>
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          <div className="hidden sm:block w-px h-5 bg-white/[0.06]" />
+          <div className="hidden sm:block w-px h-5 bg-[var(--upt-sidebar-border)]" />
 
-          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[var(--upt-sidebar-item-hover-bg)] border border-[var(--upt-sidebar-border)]">
             {user.avatar && (
-              <img src={user.avatar} alt="" className="w-[22px] h-[22px] rounded-full object-cover ring-1 ring-white/10" />
+              <img src={user.avatar} alt="" className="w-[22px] h-[22px] rounded-full object-cover ring-1 ring-[var(--upt-sidebar-border)]" />
             )}
-            <span className="text-white/85 text-[13px] font-semibold hidden md:inline">{user.name}</span>
+            <span className="text-[var(--upt-sidebar-text-active)] text-[13px] font-semibold hidden md:inline">{user.name}</span>
           </div>
+
           <button
             onClick={handleLogout}
             title="Cerrar sesión"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-none bg-transparent text-white/30 cursor-pointer text-[13px] font-medium transition-all duration-200 hover:text-white/70 hover:bg-white/[0.05]"
+            className="flex items-center justify-center w-9 h-9 rounded-xl border border-[var(--upt-sidebar-border)] bg-transparent text-[var(--upt-sidebar-text)] cursor-pointer transition-all duration-200 hover:text-[var(--upt-error)] hover:bg-[var(--upt-error)]/10 hover:border-[var(--upt-error)]/20"
           >
             <LogOut size={15} />
           </button>
@@ -301,7 +297,6 @@ export default function Dashboard() {
       </header>
 
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Mobile sidebar overlay */}
         {showMobileSidebar && (
           <div className="fixed inset-0 z-40 md:hidden">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMobileSidebar(false)} />
@@ -310,14 +305,36 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-        {/* Desktop sidebar */}
         <div className="hidden md:block">
           <Sidebar activeTab={activeTab} onTabChange={handleTabChange} role={user.role} />
         </div>
         <main className="flex-1 relative overflow-auto min-h-0" style={{ animation: 'fade-in 0.3s ease' }}>
-          <ActiveView />
+          <ErrorBoundary>
+            <ActiveView theme={theme} />
+          </ErrorBoundary>
         </main>
       </div>
+
+      {/* Modal de advertencia de sesión */}
+      {showSessionWarning && (
+        <div className="fixed inset-0 z-[300] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-[var(--upt-surface)] border border-[var(--upt-warning)]/30 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--upt-warning)]/10 border border-[var(--upt-warning)]/20 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-[var(--upt-warning)]" />
+            </div>
+            <h3 className="text-base font-bold text-[var(--upt-text-primary)] mb-1">Sesión por vencer</h3>
+            <p className="text-sm text-[var(--upt-text-secondary)] mb-5">
+              Tu sesión cerrará automáticamente en 2 minutos por inactividad. ¿Deseas continuar?
+            </p>
+            <button
+              onClick={() => { setShowSessionWarning(false); }}
+              className="w-full py-2.5 bg-[var(--upt-accent)] text-white rounded-xl font-bold text-sm hover:bg-[var(--upt-accent-dark)] transition-colors cursor-pointer"
+            >
+              Sí, continuar sesión
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

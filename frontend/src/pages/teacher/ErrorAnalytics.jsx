@@ -13,7 +13,9 @@ export default function ErrorAnalytics() {
     if (!isPolling) setIsLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/teacher/error-analytics`, {
-        headers: { 'X-User-ID': currentUser.id }
+        credentials: 'include',
+        headers: { 'X-User-ID': currentUser.id },
+        signal: AbortSignal.timeout(8000)
       });
       if (res.ok) setData(await res.json());
       else if (!isPolling) setData({ per_lab: [], error_patterns: [], top_struggling: [], total_analyzed: 0 });
@@ -33,9 +35,9 @@ export default function ErrorAnalytics() {
   if (isLoading) {
     return (
       <div className="p-6 lg:p-8 h-full animate-pulse">
-        <div className="h-8 w-64 bg-white/5 rounded mb-8"></div>
+        <div className="h-8 w-64 bg-[var(--upt-surface-light)] rounded mb-8"></div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[1,2,3,4].map(i => <div key={i} className="h-64 bg-white/5 rounded-2xl"></div>)}
+          {[1,2,3,4].map(i => <div key={i} className="h-64 bg-[var(--upt-surface-light)] rounded-2xl"></div>)}
         </div>
       </div>
     );
@@ -54,15 +56,15 @@ export default function ErrorAnalytics() {
           </p>
         </div>
         <button onClick={() => fetchAnalytics(true)} disabled={isLoading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-[var(--upt-text-secondary)] hover:bg-white/10 transition-all">
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--upt-surface-light)] border border-[var(--upt-surface-border)] rounded-xl text-sm font-semibold text-[var(--upt-text-secondary)] hover:bg-[var(--upt-surface-light)] transition-all">
           <RefreshCw className="w-4 h-4" /> Actualizar
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="p-6 rounded-2xl bg-[var(--upt-surface)] border border-white/6 shadow-lg">
+        <div className="p-6 rounded-2xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] shadow-lg">
           <h2 className="text-lg font-bold text-[var(--upt-text-primary)] mb-5 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-rose-400" />
+            <AlertTriangle className="w-5 h-5 text-[var(--upt-error)]" />
             Patrones de Error Detectados
           </h2>
           {data.error_patterns.length === 0 ? (
@@ -77,20 +79,20 @@ export default function ErrorAnalytics() {
                 const pct = Math.round((p.count / maxPatternCount) * 100);
                 const color = patternColors[i % patternColors.length];
                 const colorClasses = {
-                  rose: 'bg-rose-500/20 text-rose-400',
-                  amber: 'bg-amber-500/20 text-amber-400',
-                  orange: 'bg-orange-500/20 text-orange-400',
-                  purple: 'bg-purple-500/20 text-purple-400',
-                  blue: 'bg-blue-500/20 text-blue-400',
-                  indigo: 'bg-indigo-500/20 text-indigo-400',
+                  rose: 'bg-[var(--upt-error)]/20 text-[var(--upt-error)]',
+                  amber: 'bg-[var(--upt-warning)]/20 text-[var(--upt-warning)]',
+                  orange: 'bg-[var(--upt-warning)]/20 text-[var(--upt-warning)]',
+                  purple: 'bg-[var(--upt-accent)]/20 text-[var(--upt-accent-light)]',
+                  blue: 'bg-[var(--upt-info)]/20 text-[var(--upt-info)]',
+                  indigo: 'bg-[var(--upt-accent)]/20 text-[var(--upt-accent-light)]',
                 };
                 const barColors = {
-                  rose: 'from-rose-500 to-rose-400',
-                  amber: 'from-amber-500 to-amber-400',
-                  orange: 'from-orange-500 to-orange-400',
-                  purple: 'from-purple-500 to-purple-400',
-                  blue: 'from-blue-500 to-blue-400',
-                  indigo: 'from-indigo-500 to-indigo-400',
+                  rose: 'from-[var(--upt-error)] to-[var(--upt-error)]',
+                  amber: 'from-[var(--upt-warning)] to-[var(--upt-warning)]',
+                  orange: 'from-[var(--upt-warning)] to-[var(--upt-gold)]',
+                  purple: 'from-[var(--upt-accent)] to-[var(--upt-accent-light)]',
+                  blue: 'from-[var(--upt-info)] to-[var(--upt-info)]',
+                  indigo: 'from-[var(--upt-accent)] to-[var(--upt-info)]',
                 };
                 return (
                   <div key={i}>
@@ -98,7 +100,7 @@ export default function ErrorAnalytics() {
                       <span className="text-sm font-semibold text-[var(--upt-text-primary)]">{p.pattern}</span>
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${colorClasses[color]}`}>{p.count} casos</span>
                     </div>
-                    <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-[var(--upt-surface-light)] rounded-full overflow-hidden">
                       <div className={`h-full rounded-full bg-gradient-to-r ${barColors[color]} transition-all duration-1000`} style={{ width: `${pct}%` }}></div>
                     </div>
                   </div>
@@ -108,9 +110,9 @@ export default function ErrorAnalytics() {
           )}
         </div>
 
-        <div className="p-6 rounded-2xl bg-[var(--upt-surface)] border border-white/6 shadow-lg">
+        <div className="p-6 rounded-2xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] shadow-lg">
           <h2 className="text-lg font-bold text-[var(--upt-text-primary)] mb-5 flex items-center gap-2">
-            <TrendingDown className="w-5 h-5 text-amber-400" />
+            <TrendingDown className="w-5 h-5 text-[var(--upt-warning)]" />
             Estudiantes que más Ayuda Necesitan
           </h2>
           {data.top_struggling.length === 0 ? (
@@ -121,15 +123,15 @@ export default function ErrorAnalytics() {
           ) : (
             <div className="space-y-3">
               {data.top_struggling.map((s, i) => (
-                <div key={i} className="flex items-center gap-3 py-3 px-4 bg-white/[0.02] rounded-xl">
+                <div key={i} className="flex items-center gap-3 py-3 px-4 bg-[var(--upt-surface-light)]/40 rounded-xl">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm
-                    ${i === 0 ? 'bg-rose-500/20 text-rose-400' : i === 1 ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-[var(--upt-text-tertiary)]'}`}>
+                    ${i === 0 ? 'bg-[var(--upt-error)]/20 text-[var(--upt-error)]' : i === 1 ? 'bg-[var(--upt-warning)]/20 text-[var(--upt-warning)]' : 'bg-[var(--upt-surface-light)] text-[var(--upt-text-tertiary)]'}`}>
                     {i + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[var(--upt-text-primary)] truncate">{s.student}</p>
                   </div>
-                  <span className="text-sm font-bold text-purple-400">{s.ai_requests} <span className="text-[10px] font-medium opacity-60">consultas IA</span></span>
+                  <span className="text-sm font-bold text-[var(--upt-accent-light)]">{s.ai_requests} <span className="text-[10px] font-medium opacity-60">consultas IA</span></span>
                 </div>
               ))}
             </div>
@@ -137,9 +139,9 @@ export default function ErrorAnalytics() {
         </div>
       </div>
 
-      <div className="p-6 rounded-2xl bg-[var(--upt-surface)] border border-white/6 shadow-lg">
+      <div className="p-6 rounded-2xl bg-[var(--upt-surface)] border border-[var(--upt-surface-border)] shadow-lg">
         <h2 className="text-lg font-bold text-[var(--upt-text-primary)] mb-5 flex items-center gap-2">
-          <FlaskConical className="w-5 h-5 text-emerald-400" />
+          <FlaskConical className="w-5 h-5 text-[var(--upt-success)]" />
           Rendimiento por Laboratorio
         </h2>
         {data.per_lab.length === 0 ? (
@@ -151,7 +153,7 @@ export default function ErrorAnalytics() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-white/6 text-[11px] uppercase tracking-wider text-[var(--upt-text-tertiary)] font-bold">
+                <tr className="border-b border-[var(--upt-surface-border)] text-[11px] uppercase tracking-wider text-[var(--upt-text-tertiary)] font-bold">
                   <th className="px-4 py-3">Laboratorio</th>
                   <th className="px-4 py-3 text-center">Total Intentos</th>
                   <th className="px-4 py-3 text-center">Con Ayuda IA</th>
@@ -162,12 +164,12 @@ export default function ErrorAnalytics() {
                 {data.per_lab.map((lab, i) => {
                   const autonomy = lab.total > 0 ? Math.round(((lab.total - lab.with_ai) / lab.total) * 100) : 100;
                   return (
-                    <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={i} className="hover:bg-[var(--upt-surface-light)]/40 transition-colors">
                       <td className="px-4 py-3 text-sm font-semibold text-[var(--upt-text-primary)]">{lab.lab}</td>
                       <td className="px-4 py-3 text-center text-sm font-bold text-[var(--upt-text-secondary)]">{lab.total}</td>
-                      <td className="px-4 py-3 text-center text-sm font-bold text-purple-400">{lab.with_ai}</td>
+                      <td className="px-4 py-3 text-center text-sm font-bold text-[var(--upt-accent-light)]">{lab.with_ai}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-sm font-bold ${autonomy >= 70 ? 'text-emerald-400' : autonomy >= 40 ? 'text-amber-400' : 'text-rose-400'}`}>
+                        <span className={`text-sm font-bold ${autonomy >= 70 ? 'text-[var(--upt-success)]' : autonomy >= 40 ? 'text-[var(--upt-warning)]' : 'text-[var(--upt-error)]'}`}>
                           {autonomy}%
                         </span>
                       </td>

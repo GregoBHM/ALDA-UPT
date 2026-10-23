@@ -15,10 +15,10 @@ const STAT_CARDS = [
 ];
 
 const COLOR_MAP = {
-  blue:    'bg-blue-500/10 border-blue-500/20 text-blue-400',
-  purple:  'bg-purple-500/10 border-purple-500/20 text-purple-400',
-  emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-  amber:   'bg-amber-500/10 border-amber-500/20 text-amber-400',
+  blue:    'bg-[var(--upt-info)]/10 border-[var(--upt-info)]/20 text-[var(--upt-info)]',
+  purple:  'bg-[var(--upt-info)]/10 border-[var(--upt-info)]/20 text-[var(--upt-info)]',
+  emerald: 'bg-[var(--upt-success)]/10 border-[var(--upt-success)]/20 text-[var(--upt-success)]',
+  amber:   'bg-[var(--upt-warning)]/10 border-[var(--upt-warning)]/20 text-[var(--upt-warning)]',
 };
 
 export default function ReportsExport() {
@@ -31,6 +31,7 @@ export default function ReportsExport() {
     if (!isPolling) setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/teacher/error-analytics`, {
+        credentials: 'include',
         headers: { 'X-User-ID': currentUser.id },
       });
       if (res.ok) {
@@ -66,6 +67,7 @@ export default function ReportsExport() {
     setExporting('excel');
     try {
       const res = await fetch(`${API_BASE}/api/teacher/reports/export-excel`, {
+        credentials: 'include',
         headers: { 'X-User-ID': currentUser.id },
       });
       if (!res.ok) throw new Error();
@@ -207,7 +209,7 @@ export default function ReportsExport() {
           </div>
           <button
             onClick={fetchReport}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--upt-surface-border)] bg-[var(--upt-surface)] text-[13px] font-semibold text-[var(--upt-text-secondary)] shadow-sm cursor-pointer transition-all hover:bg-white/[0.05] hover:text-white"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--upt-surface-border)] bg-[var(--upt-surface)] text-[13px] font-semibold text-[var(--upt-text-secondary)] shadow-sm cursor-pointer transition-all hover:bg-[var(--upt-surface-light)] hover:text-[var(--upt-text-primary)]"
           >
             <RefreshCw size={14} /> Actualizar datos
           </button>
@@ -218,7 +220,7 @@ export default function ReportsExport() {
             <div key={key} className={`p-5 rounded-2xl border ${COLOR_MAP[color]} shadow-sm`}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold uppercase tracking-wider opacity-70">{label}</p>
-                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[var(--upt-surface-light)] flex items-center justify-center">
                   <Icon size={16} />
                 </div>
               </div>
@@ -244,20 +246,20 @@ export default function ReportsExport() {
                 <thead>
                   <tr className="border-b border-[var(--upt-surface-border)]">
                     {['Laboratorio', 'Total Intentos', 'Con Ayuda IA', 'Aprobados', 'Tasa Éxito'].map(h => (
-                      <th key={h} className={`px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-[var(--upt-text-tertiary)] bg-white/[0.02] ${h === 'Laboratorio' ? 'text-left' : 'text-center'}`}>
+                      <th key={h} className={`px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-[var(--upt-text-tertiary)] bg-[var(--upt-surface-light)]/40 ${h === 'Laboratorio' ? 'text-left' : 'text-center'}`}>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.04]">
+                <tbody className="divide-y divide-[var(--upt-surface-border)]">
                   {data.per_lab.map((lab, i) => {
                     const passed = lab.passed || 0;
                     const rate = lab.total > 0 ? Math.round((passed / lab.total) * 100) : 0;
-                    const rateColor = rate >= 70 ? 'text-emerald-400' : rate >= 40 ? 'text-amber-400' : 'text-rose-400';
-                    const rateBg = rate >= 70 ? 'bg-emerald-400' : rate >= 40 ? 'bg-amber-400' : 'bg-rose-400';
+                    const rateColor = rate >= 70 ? 'text-[var(--upt-success)]' : rate >= 40 ? 'text-[var(--upt-warning)]' : 'text-[var(--upt-error)]';
+                    const rateBg = rate >= 70 ? 'bg-[var(--upt-success)]' : rate >= 40 ? 'bg-[var(--upt-warning)]' : 'bg-[var(--upt-error)]';
                     return (
-                      <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                      <tr key={i} className="hover:bg-[var(--upt-surface-light)]/40 transition-colors">
                         <td className="px-5 py-3.5 text-[13px] font-semibold text-[var(--upt-text-primary)]">
                           <div className="flex items-center gap-2.5">
                             <div className="w-2 h-2 rounded-full bg-[var(--upt-accent)] shrink-0" />
@@ -266,10 +268,10 @@ export default function ReportsExport() {
                         </td>
                         <td className="px-5 py-3.5 text-center text-sm font-bold text-[var(--upt-text-primary)]">{lab.total}</td>
                         <td className="px-5 py-3.5 text-center">
-                          <span className="text-[13px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400">{lab.with_ai}</span>
+                          <span className="text-[13px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--upt-info)]/10 text-[var(--upt-info)]">{lab.with_ai}</span>
                         </td>
                         <td className="px-5 py-3.5 text-center">
-                          <span className="inline-flex items-center gap-1 text-[13px] font-bold text-emerald-400">
+                          <span className="inline-flex items-center gap-1 text-[13px] font-bold text-[var(--upt-success)]">
                             <CheckCircle2 size={13} /> {passed}
                           </span>
                         </td>
@@ -294,7 +296,7 @@ export default function ReportsExport() {
           <button
             onClick={handleExportExcel}
             disabled={exporting === 'excel'}
-            className="flex items-center justify-center gap-3 px-7 py-5 rounded-2xl border-none bg-gradient-to-br from-green-800 to-green-600 text-white cursor-pointer text-[15px] font-bold transition-all duration-200 shadow-[0_4px_20px_rgba(22,163,74,0.3)] disabled:opacity-70 hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(22,163,74,0.4)] group"
+            className="flex items-center justify-center gap-3 px-7 py-5 rounded-2xl border-none bg-gradient-to-br from-[var(--upt-success)] to-[var(--upt-success)] text-white cursor-pointer text-[15px] font-bold transition-all duration-200 shadow-[0_4px_20px_rgba(22,163,74,0.3)] disabled:opacity-70 hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(22,163,74,0.4)] group"
           >
             {exporting === 'excel'
               ? <Loader2 size={20} className="animate-spin" />
@@ -310,7 +312,7 @@ export default function ReportsExport() {
           <button
             onClick={handleExportPDF}
             disabled={exporting === 'pdf'}
-            className="flex items-center justify-center gap-3 px-7 py-5 rounded-2xl border-none bg-gradient-to-br from-red-800 to-red-600 text-white cursor-pointer text-[15px] font-bold transition-all duration-200 shadow-[0_4px_20px_rgba(220,38,38,0.3)] disabled:opacity-70 hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(220,38,38,0.4)] group"
+            className="flex items-center justify-center gap-3 px-7 py-5 rounded-2xl border-none bg-gradient-to-br from-[var(--upt-error)] to-[var(--upt-error)] text-white cursor-pointer text-[15px] font-bold transition-all duration-200 shadow-[0_4px_20px_rgba(220,38,38,0.3)] disabled:opacity-70 hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(220,38,38,0.4)] group"
           >
             {exporting === 'pdf'
               ? <Loader2 size={20} className="animate-spin" />
