@@ -113,4 +113,4 @@ docker compose --env-file .env.local -f docker-compose.local.yml start
 
 ## 📖 Manual completo
 
-Para explicación detallada, diagnóstico y evidencias: [Manual de despliegue local corregido](docs/DESPLIEGUE_LOCAL_CORREGIDO.md). Esta guía corta es para una instalación **local**; el despliegue remoto usa otra configuración con **Dokploy/Traefik**.
+Para explicación detallada, diagnóstico y evidencias: [Manual de despliegue local corregido](https://github.com/GregoBHM/ALDA-UPT/blob/fix/manual-despliegue-local-2026-11/docs/DESPLIEGUE_LOCAL_CORREGIDO.md). Esta guía corta es para una instalación **local**; el despliegue remoto usa otra configuración con **Dokploy/Traefik**.
