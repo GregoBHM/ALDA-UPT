@@ -13,10 +13,12 @@ Docker Desktop con contenedores Linux y motor WSL 2, Git para Windows, PowerShel
 
 ## Despliegue local (PowerShell)
 
+**Mientras la corrección sea un PR sin fusionar**, clonar la rama de revisión explícita. Cuando se apruebe y fusione, utilizar `main` en lugar de esta rama.
+
 ```powershell
 New-Item -ItemType Directory -Force C:\proyectos
 Set-Location C:\proyectos
-git clone https://github.com/GregoBHM/ALDA-UPT.git
+git clone --branch fix/manual-despliegue-local-2026-11 --single-branch --depth 1 https://github.com/GregoBHM/ALDA-UPT.git
 Set-Location .\ALDA-UPT
 Copy-Item .\.env.local.example .\.env.local
 notepad .\.env.local
