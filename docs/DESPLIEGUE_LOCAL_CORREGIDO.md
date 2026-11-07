@@ -32,10 +32,12 @@ wsl --status
 
 ## 2. Obtener código y verificar ubicación
 
+**IMPORTANTE:** la plantilla `.env.local.example` solo existe en la rama de corrección mientras el PR siga sin fusionarse. El comando de clonación siguiente selecciona esa rama; cuando el PR se integre a `main`, vuelve a utilizar `main`.
+
 ```powershell
 New-Item -ItemType Directory -Force C:\proyectos
 Set-Location C:\proyectos
-git clone https://github.com/GregoBHM/ALDA-UPT.git
+git clone --branch fix/manual-despliegue-local-2026-11 --single-branch --depth 1 https://github.com/GregoBHM/ALDA-UPT.git
 Set-Location .\ALDA-UPT
 Get-Location
 Test-Path .\docker-compose.local.yml
