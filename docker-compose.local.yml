@@ -12,8 +12,10 @@ services:
     volumes:
       - postgres_local_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    ports:
-      - "127.0.0.1:5432:5432"
+    # PostgreSQL se comunica internamente por db:5432.
+    # No publicar 5432 en Windows evita conflictos con otros PostgreSQL.
+    expose:
+      - "5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U alda_admin -d alda_db"]
       interval: 5s
@@ -62,6 +64,12 @@ services:
         condition: service_healthy
       chroma:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8000/api/health > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
 
   frontend:
     build:
@@ -75,7 +83,8 @@ services:
     ports:
       - "127.0.0.1:5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_local_data:
