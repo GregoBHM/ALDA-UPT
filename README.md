@@ -1,189 +1,85 @@
-# 🧠 ALDA — AI-based Learning & Development Assistant
+# ALDA-UPT — AI-based Learning & Development Assistant
 
-Plataforma educativa institucional para la Escuela de Ingeniería de Sistemas (EPIS — UPT).  
-Tutor virtual inteligente con **Método Socrático**: guía al estudiante mediante preguntas reflexivas para que descubra las soluciones por sí mismo.
+Plataforma educativa de la Escuela Profesional de Ingeniería de Sistemas (UPT): tutoría socrática con IA/RAG, laboratorios de programación, IDE web y roles estudiante/docente/administrador.
 
-> **Autores:** Gregory Huanca & Andy Calizaya  
-> **Institución:** Universidad Privada de Tacna — EPIS  
-> **Versión:** 1.0 (2026)
+## Componentes
+- **Frontend:** React, Vite y Nginx (contenedor web).
+- **Backend:** FastAPI, Python 3.12 y cliente Docker para ejecutar código.
+- **Base relacional:** PostgreSQL 15, inicializada con `database/schema.sql` solo al crear un volumen nuevo.
+- **Base vectorial:** ChromaDB, fijada en la versión 1.5.9 para el entorno local.
 
----
+## Requisitos para Windows 10/11
+Docker Desktop con contenedores Linux y motor WSL 2, Git para Windows, PowerShell, conexión a internet y puertos 5173, 8000, 5432 y 8100 libres.
 
-## 🚀 Características
+## Despliegue local (PowerShell)
 
-| Módulo | Descripción |
-| :--- | :--- |
-| **Tutoría IA (RAG)** | Google Gemini + ChromaDB. Respuestas basadas en documentos del docente |
-| **IDE Web** | Monaco Editor (igual que VS Code) — C++, Python, Java, JavaScript |
-| **Sandbox Seguro** | Compilación y ejecución aislada en contenedores Docker |
-| **Roles** | Estudiante · Docente · Administrador (OAuth 2.0 Google) |
-| **Anti-plagio / Juez IA** | Evaluación automática con casos de prueba ocultos |
-
----
-
-## 🛠️ Stack Tecnológico
-
-| Capa | Tecnología |
-| :--- | :--- |
-| Frontend | React 19 + Vite + Tailwind CSS + Monaco Editor |
-| Backend | FastAPI (Python 3.12) |
-| Base de Datos | PostgreSQL 15 |
-| Base Vectorial | ChromaDB |
-| IA | Google GenAI (Gemini 2.5 Flash) |
-| Infraestructura | Docker + Docker Compose |
-
----
-
-## ⚡ Despliegue Local — Desde Cero en 3 Pasos
-
-### Requisitos previos
-- **Docker Desktop** instalado y en ejecución (ícono verde en barra de tareas)
-- **Git** instalado
-
-### Paso 1 — Clonar el repositorio
-
-```bash
+```powershell
+New-Item -ItemType Directory -Force C:\proyectos
+Set-Location C:\proyectos
 git clone https://github.com/GregoBHM/ALDA-UPT.git
-cd ALDA-UPT
+Set-Location .\ALDA-UPT
+Copy-Item .\.env.local.example .\.env.local
+notepad .\.env.local
 ```
 
-### Paso 2 — Configuración del archivo `.env.local`
+Completa en **tu propio** `.env.local` con secretos nuevos; **nunca copies claves del historial público**. Necesitas `DB_PASSWORD`, `SESSION_SECRET` (mínimo 32 caracteres), `VITE_GOOGLE_CLIENT_ID`, `BOOTSTRAP_ADMIN_EMAIL`, URL de API y orígenes CORS correctos. Genera una clave de sesión con:
 
-El repositorio ya incluye el archivo `.env.local` preconfigurado con las claves necesarias para la ejecución local:
-
-```ini
-# ── Base de Datos ─────────────────────────────────────────
-DB_PASSWORD=&WV_txqNd&Bq9Ki^
-
-# ── Seguridad / Sesiones ──────────────────────────────────
-SESSION_SECRET=2fwEKIIKV-jrqRJe4tXHKGd-qWMOcreFoHBbvPCZdvoBuep8gWdcmjX5zoWjgld0
-SESSION_TTL_HOURS=8
-COOKIE_SECURE=false
-
-# ── Google OAuth ──────────────────────────────────────────
-VITE_GOOGLE_CLIENT_ID=89768386906-1i19pg7ocbcjb9eca7gh8hq5buahdqeo.apps.googleusercontent.com
-BOOTSTRAP_ADMIN_EMAIL=grehuanca@upt.pe
-
-# ── URLs locales ──────────────────────────────────────────
-VITE_API_URL=http://localhost:8000
-CORS_ORIGINS=http://localhost:5173,http://localhost:8000
-
-# ── Google AI (Gemini) ────────────────────────────────────
-GOOGLE_AI_API_KEY=AIzaSyBM1TuB5E4RdSoIi6BsXmn8OI21S5Y7ofA
+```powershell
+([guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N"))
 ```
 
-> Si se clona en una nueva máquina sin el archivo, simplemente copia `.env.example` como `.env.local` y coloca las claves de arriba.
+Configura en Google Cloud Console un cliente OAuth de tipo aplicación web con origen autorizado `http://localhost:5173`. El acceso requiere cuenta autorizada; una web visible no demuestra que OAuth funcione.
 
-### Paso 3 — Levantar todo con Docker Compose
-
-Ejecuta el siguiente comando en la raíz del proyecto:
-
-```bash
-docker compose -f docker-compose.local.yml --env-file .env.local up --build -d
+```powershell
+docker info
+docker compose --env-file .env.local -f docker-compose.local.yml config --quiet
+docker compose --env-file .env.local -f docker-compose.local.yml up --build -d
+docker compose --env-file .env.local -f docker-compose.local.yml ps
+Invoke-RestMethod http://localhost:8000/api/health
 ```
 
-Docker descargará las imágenes oficiales, compilará el backend y frontend, y levantará los 4 servicios automáticamente en segundo plano.
+Deberías poder abrir `http://localhost:5173` (web) y `http://localhost:8000/docs` (Swagger). El endpoint health verifica una consulta simple a PostgreSQL y conectividad TCP a ChromaDB; no confirma que el RAG ni el IDE funcionen.
 
----
+## Verificación adicional
 
-## 🌐 Accesos una vez levantado
-
-| Servicio | URL |
-| :--- | :--- |
-| **Aplicación Web** | http://localhost:5173 |
-| **API Backend** | http://localhost:8000 |
-| **Documentación API (Swagger)** | http://localhost:8000/docs |
-| **Base de Datos** | `localhost:5432` (usuario: `alda_admin`, db: `alda_db`) |
-| **ChromaDB** | http://localhost:8100 |
-
----
-
-## ✅ Verificar que todo funciona
-
-### 1. Healthcheck de la infraestructura
-```bash
-curl http://localhost:8000/api/health
-# Resultado esperado: {"status": "ok"}
-```
-
-### 2. Ver estado de los contenedores
-```bash
-docker compose -f docker-compose.local.yml ps
-```
-Los 4 contenedores deben estar en estado **Up**:
-- `alda_postgres_local`
-- `alda_chroma_local`
-- `alda_backend_local`
-- `alda_frontend_local`
-
-### 3. Ver logs en tiempo real
-```bash
-docker compose -f docker-compose.local.yml logs -f backend
-```
-
-### 4. Verificar tablas de la base de datos
-```bash
+```powershell
+docker compose --env-file .env.local -f docker-compose.local.yml logs --tail=80 backend
 docker exec -it alda_postgres_local psql -U alda_admin -d alda_db -c "\dt"
+docker exec alda_backend_local docker version
+docker image ls
 ```
 
----
+Prueba manualmente: inicio de sesión Google, roles, creación de laboratorio, ejecución de Python y otros lenguajes, subida y consulta de PDF con RAG, y persistencia después de recrear contenedores **sin eliminar volúmenes**.
 
-## 🗂️ Estructura del Proyecto
+> **Advertencia Windows/IDE:** El compilador usa el socket Docker y un montaje temporal de `/tmp`. Que `docker version` funcione dentro del backend no garantiza que los contenedores anidados de Java/C++ vean los archivos; hay que validarlo en el Docker Desktop/WSL 2 concreto. El socket Docker otorga privilegios elevados sobre el motor: esta instalación es de confianza local, no un entorno seguro para ejecutar código de personas desconocidas.
 
-```text
-ALDA-UPT/
-├── docker-compose.local.yml   # ← Orquestador principal (despliegue local)
-├── docker-compose.yml         # Orquestador de producción (Dokploy)
-├── .env.local               # Variables de entorno locales (preconfigurado)
-├── .env.dokploy             # Variables de entorno para servidor Dokploy
-├── .env.example             # Plantilla de variables (referencia)
-├── backend/
-│   ├── Dockerfile             # Build multi-stage Python 3.12-slim
-│   ├── main.py                # Punto de entrada FastAPI
-│   ├── models.py              # Modelos SQLAlchemy (ORM)
-│   ├── database.py            # Conexión PostgreSQL
-│   ├── chroma_service.py      # Gestión ChromaDB (RAG)
-│   ├── routers/               # Endpoints: auth, admin, teacher, student
-│   ├── services/              # Lógica de negocio por rol
-│   ├── schemas/               # Validación Pydantic
-│   ├── core/                  # Seguridad, sesiones, dependencias
-│   └── requirements.txt       # Dependencias Python
-├── frontend/
-│   ├── Dockerfile             # Build Node 20 → Nginx
-│   ├── nginx.conf             # Configuración SPA (React Router)
-│   ├── src/
-│   │   ├── components/        # Editor, Consola, Sidebar, etc.
-│   │   ├── pages/             # Vistas por rol (admin, student, teacher)
-│   │   └── api.js             # Cliente HTTP centralizado
-│   └── package.json
-└── database/
-    └── schema.sql             # Tablas, ENUMs y datos iniciales
+> **Advertencia ChromaDB:** El Compose corregido monta `/data`, como requieren las imágenes actuales de ChromaDB. Si ya tienes un volumen de ChromaDB con datos, no sobrescribas ni recrees nada antes de verificar su ubicación real y guardar respaldo. Cambiar el montaje sin migración puede dar la impresión de que desaparecieron documentos.
+
+## Operación y protección de datos
+
+```powershell
+# Detener conservando datos
+docker compose --env-file .env.local -f docker-compose.local.yml stop
+
+# Volver a activar
+docker compose --env-file .env.local -f docker-compose.local.yml start
+
+# Respaldo lógico de PostgreSQL
+docker exec alda_postgres_local pg_dump -U alda_admin -d alda_db -f /tmp/alda_backup.sql
+docker cp alda_postgres_local:/tmp/alda_backup.sql .\alda_backup.sql
 ```
 
----
+`stop` y `down` no eliminan volúmenes. **No ejecutes `docker compose down -v` si necesitas conservar los datos.** Un respaldo PostgreSQL no incluye los datos ChromaDB ni los PDFs subidos: respáldalos por separado y ensaya restauraciones en una instalación aislada. Los cambios posteriores en `schema.sql` no migran una BD previamente creada.
 
-## 🔧 Comandos Útiles
+## Seguridad del repositorio
 
-```bash
-# Apagar sin borrar datos
-docker compose -f docker-compose.local.yml stop
+Los archivos `.env.local` y `.env.dokploy` fueron rastreados en versiones anteriores del repositorio público. **Las claves que contengan deben considerarse comprometidas:** revoca/rótalas en los proveedores correspondientes, actualiza sus consumidores, elimina archivos confidenciales de las ramas publicadas y coordina limpieza del historial Git. Quitar archivos de la rama actual **no** borra copias previas del historial o forks.
 
-# Apagar y eliminar contenedores (conserva volúmenes)
-docker compose -f docker-compose.local.yml down
+Solo `.env.example` y `.env.local.example` son plantillas públicas, sin valores de secretos reales. No publiques logs, capturas o respaldos que incluyan tokens y contraseñas.
 
-# Reinicio total desde cero (borra base de datos)
-docker compose -f docker-compose.local.yml down -v
-docker compose -f docker-compose.local.yml --env-file .env.local up --build -d
+## Despliegue remoto
+`docker-compose.yml` corresponde a la modalidad VPS/Dokploy: exige `dokploy-network`, Traefik, HTTPS y un dominio configurado. **No es el Compose de este tutorial local**.
 
-# Ver logs de un servicio específico
-docker compose -f docker-compose.local.yml logs -f frontend
-docker compose -f docker-compose.local.yml logs -f backend
-docker compose -f docker-compose.local.yml logs -f db
-```
+Documentación más detallada: [docs/DESPLIEGUE_LOCAL_CORREGIDO.md](docs/DESPLIEGUE_LOCAL_CORREGIDO.md).
 
----
-
-## 📜 Licencia
-
-Desarrollado para la Escuela Profesional de Ingeniería de Sistemas (EPIS) — Universidad Privada de Tacna (UPT).  
-Uso académico institucional.
+Documentación oficial: [Docker Desktop WSL 2](https://docs.docker.com/desktop/features/wsl/), [Chroma Docker](https://cookbook.chromadb.dev/running/running-chroma/), [GitHub: quitar datos confidenciales](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
