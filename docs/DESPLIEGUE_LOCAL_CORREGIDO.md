@@ -16,7 +16,7 @@
 
 1. Docker Desktop en modo contenedores Linux con WSL 2. Comprobar virtualización y WSL; reiniciar si lo pide el instalador.
 2. Git para Windows y PowerShell. VS Code opcional.
-3. Puertos 5173, 8000, 5432 y 8100 libres; internet para imágenes y proveedores externos.
+3. Puertos 5173, 8000 y 8100 libres; internet para imágenes y proveedores externos. PostgreSQL escucha en 5432 solo dentro de la red de Docker (sin publicar 5432 en Windows).
 4. 8 GB RAM y 15–20 GB libres son **referencias iniciales no validadas**, pueden requerirse más recursos para Java/C++ e imágenes.
 5. Crear una carpeta fuera de `Program Files`, OneDrive o rutas protegidas, por ejemplo `C:\proyectos`.
 
@@ -64,7 +64,7 @@ Modificar **antes** de iniciar:
 
 | Clave | Uso |
 | --- | --- |
-| `DB_PASSWORD` | Contraseña local nueva, preferentemente alfanumérica para evitar problemas de URL en el backend |
+| `DB_PASSWORD` | Contraseña local nueva y robusta; el backend usa URL.create para manejar correctamente los caracteres especiales |
 | `SESSION_SECRET` | Cadena aleatoria de 32 o más caracteres |
 | `SESSION_TTL_HOURS` | Por defecto 8 |
 | `COOKIE_SECURE` | `false` solo para HTTP local |
@@ -104,7 +104,7 @@ docker compose --env-file .env.local -f docker-compose.local.yml up --build -d
 docker compose --env-file .env.local -f docker-compose.local.yml ps
 ```
 
-**Esperado:** `db`, `chroma`, `backend`, `frontend`; PostgreSQL saludable. El Compose corregido publica los puertos **solo en 127.0.0.1** y usa `chromadb/chroma:1.5.9` con volumen `/data`.
+**Esperado:** `db`, `chroma`, `backend`, `frontend`; PostgreSQL saludable. El Compose corregido publica únicamente el frontend/API/puerto de diagnóstico Chroma en **127.0.0.1**, mantiene PostgreSQL accesible solo en la red interna de Docker y usa `chromadb/chroma:1.5.9` con volumen `/data`.
 
 Si falla:
 
@@ -197,6 +197,38 @@ Test-Path .\alda_backup.sql
 | PD-11 | Credenciales | no hay secretos reales públicos actuales; claves expuestas rotadas |
 
 **NO afirmar aprobación total** si solo se ha verificado PD-01 a PD-05. El criterio final exige las pruebas funcionales y de persistencia relevantes.
+
+
+## 11. Corrección aplicada al fallo "port is already allocated: 5432" (Windows)
+
+Si el contenedor `alda_postgres_local` muestra redes vacías (`{}`) y el backend indica `Name or service not known` para `db`, **no** cambies `DB_HOST` a localhost. El puerto 5432 debe mantenerse dentro de Docker, pero no debe publicarse en Windows.
+
+La configuración local corregida elimina `ports: "127.0.0.1:5432:5432"` del servicio `db`. El backend alcanza la base mediante `db:5432`. También incluye un healthcheck del backend (que consulta `/api/health`) y condiciona el inicio del frontend a su estado saludable.
+
+### Recuperación sin borrar volúmenes
+
+```powershell
+Set-Location C:\proyectos\ALDA-UPT
+git branch --show-current
+git status --short
+git pull --ff-only origin fix/manual-despliegue-local-2026-11
+docker compose --env-file .env.local -f docker-compose.local.yml config --quiet
+docker compose --env-file .env.local -f docker-compose.local.yml up -d --no-deps --force-recreate db
+docker compose --env-file .env.local -f docker-compose.local.yml up -d --build
+docker compose --env-file .env.local -f docker-compose.local.yml ps
+Invoke-RestMethod http://localhost:8000/api/health
+```
+
+No sobrescribas tu `.env.local`. Si tienes cambios locales en Compose, respáldalos y reconcílialos antes de hacer pull. Nunca uses `down -v`. Tras el primer `up`, PostgreSQL debe figurar como conectado a la red `alda-upt_default` y estar `healthy`.
+
+Si aún falla, revisa la conectividad desde el backend:
+
+```powershell
+docker exec alda_backend_local python -c "import socket; print(socket.gethostbyname('db')); s=socket.create_connection(('db',5432),5); print('Conexion TCP: OK'); s.close()"
+docker compose --env-file .env.local -f docker-compose.local.yml logs --tail=60 backend db chroma
+```
+
+Si `Connection TCP: OK` aparece pero `/api/health` falla, revisar las trazas del backend: una configuración SQL/contraseña existente puede ser la causa. No compartir secretos en logs.
 
 ## Referencias
 
