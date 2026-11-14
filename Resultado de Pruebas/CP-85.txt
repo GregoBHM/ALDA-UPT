@@ -1,0 +1,9 @@
+=== Resultados CP-85 (Tiempo de Procesamiento de Material) ===
+
+Tiempo de extracción y vectorización: 0.17 segundos
+Umbral máximo permitido: 30.00 segundos
+Estado de la prueba: EXITOSO
+
+Observación: La prueba inyecta 20 páginas de texto plano usando
+mocks de pdfplumber y ChromaDB. En entornos aislados o locales sin IO
+lento, el tiempo es subsegundo (ej. <0.1s), cumpliendo el RNF.

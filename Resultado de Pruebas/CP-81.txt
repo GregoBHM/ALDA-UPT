@@ -1,0 +1,7 @@
+=== Resultados CP-81 (Validación Formato de Material) ===
+
+.txt file upload -> Status: 400 | Resultado: Rechazado (OK)
+.docx file upload -> Status: 400 | Resultado: Rechazado (OK)
+
+Observación: El endpoint '/upload-pdf' correctamente restringe la subida
+a archivos PDF exclusivamente, rechazando extensiones como .txt y .docx con error 400.

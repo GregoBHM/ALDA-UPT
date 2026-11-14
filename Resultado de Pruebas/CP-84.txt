@@ -1,0 +1,7 @@
+=== Resultados CP-84 (Integración Material con Tutor IA) ===
+
+Integración RAG -> Tutor IA -> Status: 200 | Resultado: Éxito (Contexto RAG inyectado)
+
+Observación: La integración con ChromaDB se simula correctamente
+y los fragmentos de conocimiento se anexan explícitamente al prompt
+que consume el modelo de lenguaje (Gemini/OpenAI).

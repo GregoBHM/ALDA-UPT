@@ -1,0 +1,8 @@
+=== Resultados CP-49 (Integración Anuncios con Dashboard) ===
+
+Teacher Post Anuncio -> Status: 200 | Resultado: Creado (OK)
+Student Get Anuncio -> Status: 200 | Resultado: Encontrado (OK)
+
+Observación: El endpoint del estudiante retorna exitosamente los
+anuncios creados por el docente en la base de datos, asegurando la
+comunicación de novedades en la plataforma.

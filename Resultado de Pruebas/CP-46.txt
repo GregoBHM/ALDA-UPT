@@ -1,0 +1,10 @@
+=== Resultados CP-46 (Validación Estructura Anuncio) ===
+
+Válido -> Status: 200 | Resultado: Aceptado (OK)
+Título vacío -> Status: 422 | Resultado: Rechazado (OK)
+Título espacios -> Status: 422 | Resultado: Rechazado (OK)
+Contenido < 10 chars -> Status: 422 | Resultado: Rechazado (OK)
+
+Observación: El framework de validación (Pydantic) ha actuado
+correctamente devolviendo HTTP 422 a peticiones que no cumplen
+el requerimiento (Título no vacío, contenido >= 10 chars).

@@ -1,0 +1,8 @@
+=== Resultados CP-50 (Rendimiento Dashboard Anuncios) ===
+
+Tiempo de respuesta de consulta (25 anuncios en BD): 0.065 segundos
+Umbral máximo permitido: 2.000 segundos
+Estado de la prueba: EXITOSO
+
+Observación: La operación es extremadamente rápida y cumple
+ampliamente con los Requerimientos No Funcionales del sistema.
