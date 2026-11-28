@@ -1,0 +1,121 @@
+id,caso,tipo,modo_documentado
+CP-01,Validación de Dominio,Unitaria,Automatizada
+CP-02,Flujo Completo Estudiante,Funcional,Manual
+CP-03,Bloqueo Dominio Externo,Aceptación,Manual
+CP-04,Envío de Token Frontend-Backend,Integración,Automatizada
+CP-05,Tiempo de Respuesta Login,No funcionales,Automatizada
+CP-06,Validar Lógica de Dominio Institucional,Unitaria,Automatizada
+CP-07,Acceso Exitoso Dominio Institucional,Funcional,Manual
+CP-08,Rechazo Cuenta No Institucional,Aceptación,Manual
+CP-09,Integración Validación OAuth y Dominio,Integración,Automatizada
+CP-10,Tiempo de Respuesta Validación Dominio,No funcionales,Automatizada
+CP-11,Cálculo de Métricas de Progreso,Unitaria,Automatizada
+CP-12,Visualización Panel de Progreso,Funcional,Manual
+CP-13,Progreso Personal Aislado,Aceptación,Manual
+CP-14,Integración Progreso con Base de Datos,Integración,Automatizada
+CP-15,Carga de Panel de Progreso,No funcionales,Automatizada
+CP-16,Filtrado de Retos por Dificultad,Unitaria,Automatizada
+CP-17,Visualización Catálogo de Retos,Funcional,Manual
+CP-18,Catálogo Solo Muestra Retos Activos,Aceptación,Manual
+CP-19,Integración Catálogo con Progreso,Integración,Automatizada
+CP-20,Tiempo de Carga del Catálogo,No funcionales,Automatizada
+CP-21,Validación Sintáctica del Código,Unitaria,Automatizada
+CP-22,Ejecución de Código en Editor,Funcional,Manual
+CP-23,Aislamiento de Ejecución de Código,Aceptación,Manual
+CP-24,Integración Editor con Evaluador,Integración,Automatizada
+CP-25,Tiempo de Ejecución de Código,No funcionales,Automatizada
+CP-26,Evaluación Correcta de Casos de Prueba,Unitaria,Automatizada
+CP-27,Visualización Resultados de Evaluación,Funcional,Manual
+CP-28,Casos de Prueba Ocultos,Aceptación,Manual
+CP-29,Integración Evaluación con Historial,Integración,Automatizada
+CP-30,Tiempo de Evaluación con Casos de Prueba,No funcionales,Automatizada
+CP-31,Generación de Respuesta del Tutor IA,Unitaria,Automatizada
+CP-32,Solicitud de Guía en Interfaz,Funcional,Manual
+CP-33,Guía sin Revelar Solución,Aceptación,Manual
+CP-34,Integración Tutor con Contexto del Reto,Integración,Automatizada
+CP-35,Tiempo de Respuesta del Tutor IA,No funcionales,Automatizada
+CP-36,Almacenamiento de Calificación,Unitaria,Automatizada
+CP-37,Calificación de Respuesta del Tutor,Funcional,Manual
+CP-38,Una Sola Calificación por Intento,Aceptación,Manual
+CP-39,Integración Calificación con Estadísticas,Integración,Automatizada
+CP-40,Accesibilidad del Sistema de Calificación,No funcionales,Manual
+CP-41,Consulta de Intentos por Reto,Unitaria,Automatizada
+CP-42,Visualización Historial de Intentos,Funcional,Manual
+CP-43,Aislamiento de Historial por Estudiante,Aceptación,Manual
+CP-44,Integración Historial con Editor,Integración,Automatizada
+CP-45,Carga del Historial Extenso,No funcionales,Automatizada
+CP-46,Validación de Estructura del Anuncio,Unitaria,Automatizada
+CP-47,Visualización de Anuncios del Docente,Funcional,Manual
+CP-48,Solo Docentes Publican Anuncios,Aceptación,Manual
+CP-49,Integración Anuncios con Dashboard,Integración,Automatizada
+CP-50,Carga de Anuncios en el Dashboard,No funcionales,Automatizada
+CP-51,Cálculo de Estadísticas de Clase,Unitaria,Automatizada
+CP-52,Visualización Panel Estadísticas de Clase,Funcional,Manual
+CP-53,Solo Docentes Acceden a Estadísticas,Aceptación,Manual
+CP-54,Integración Estadísticas con Datos Reales,Integración,Automatizada
+CP-55,Tiempo de Carga del Panel de Estadísticas,No funcionales,Automatizada
+CP-56,Identificación de Errores Frecuentes,Unitaria,Automatizada
+CP-57,Visualización Análisis de Errores,Funcional,Manual
+CP-58,Solo Docentes Acceden al Análisis,Aceptación,Manual
+CP-59,Integración Análisis con Historial,Integración,Automatizada
+CP-60,Tiempo de Generación del Análisis,No funcionales,Automatizada
+CP-61,Validación de Campos del Laboratorio,Unitaria,Automatizada
+CP-62,Creación de Laboratorio desde el Panel Docente,Funcional,Manual
+CP-63,Laboratorio con Casos de Prueba Obligatorios,Aceptación,Manual
+CP-64,Integración Laboratorio con Catálogo,Integración,Automatizada
+CP-65,Tiempo de Creación de Laboratorio,No funcionales,Automatizada
+CP-66,Verificación de Autoría del Laboratorio,Unitaria,Automatizada
+CP-67,Eliminación de Laboratorio Propio,Funcional,Manual
+CP-68,Impedimento de Eliminar Laboratorio Ajeno,Aceptación,Manual
+CP-69,Integración Eliminación con Intentos,Integración,Automatizada
+CP-70,Tiempo de Eliminación con Cascada,No funcionales,Automatizada
+CP-71,Validación de Campos del Anuncio,Unitaria,Automatizada
+CP-72,Publicación de Anuncio Académico,Funcional,Manual
+CP-73,Solo Docentes Pueden Publicar Anuncios,Aceptación,Manual
+CP-74,Integración Anuncio con Dashboard Estudiantil,Integración,Automatizada
+CP-75,Tiempo de Publicación del Anuncio,No funcionales,Automatizada
+CP-76,Verificación de Autoría del Anuncio,Unitaria,Automatizada
+CP-77,Eliminación de Anuncio Propio,Funcional,Manual
+CP-78,Impedimento de Eliminar Anuncio Ajeno,Aceptación,Manual
+CP-79,Integración Eliminación de Anuncio con Dashboard,Integración,Automatizada
+CP-80,Tiempo de Eliminación del Anuncio,No funcionales,Automatizada
+CP-81,Validación de Formato del Material,Unitaria,Automatizada
+CP-82,Carga de Material Pedagógico,Funcional,Manual
+CP-83,Acceso Restringido a Carga de Material,Aceptación,Manual
+CP-84,Integración Material con Tutor IA,Integración,Automatizada
+CP-85,Tiempo de Procesamiento del Material,No funcionales,Automatizada
+CP-86,Verificación de Existencia del Material,Unitaria,Automatizada
+CP-87,Eliminación de Material Pedagógico,Funcional,Manual
+CP-88,Acceso Restringido a Eliminación de Material,Aceptación,Manual
+CP-89,Integración Eliminación Material con Tutor IA,Integración,Automatizada
+CP-90,Tiempo de Eliminación del Material,No funcionales,Automatizada
+CP-91,Generación de Datos para Reporte,Unitaria,Automatizada
+CP-92,Generación y Descarga de Reporte,Funcional,Manual
+CP-93,Solo Docentes Generan Reportes,Aceptación,Manual
+CP-94,Integración Reporte con Datos Reales,Integración,Automatizada
+CP-95,Tiempo de Generación del Reporte,No funcionales,Automatizada
+CP-96,Consulta de Métricas Globales,Unitaria,Automatizada
+CP-97,Visualización Panel de Estado General,Funcional,Manual
+CP-98,Acceso Restringido al Panel de Estado,Aceptación,Manual
+CP-99,Integración Estado con Servicios Externos,Integración,Automatizada
+CP-100,Tiempo de Carga del Panel de Estado,No funcionales,Automatizada
+CP-101,Validación de Rol en Cambio,Unitaria,Automatizada
+CP-102,Cambio de Rol de Usuario,Funcional,Manual
+CP-103,Solo Admins Pueden Cambiar Roles,Aceptación,Manual
+CP-104,Integración Cambio de Rol con Vistas,Integración,Automatizada
+CP-105,Tiempo de Aplicación del Cambio de Rol,No funcionales,Automatizada
+CP-106,Validación de Estado de Suspensión,Unitaria,Automatizada
+CP-107,Suspensión y Reactivación de Usuario,Funcional,Manual
+CP-108,Solo Admins Suspenden Usuarios,Aceptación,Manual
+CP-109,Integración Suspensión con Flujo de Login,Integración,Automatizada
+CP-110,Tiempo de Aplicación de Suspensión,No funcionales,Automatizada
+CP-111,Validación de Correo en Lista Blanca,Unitaria,Automatizada
+CP-112,Agregar y Eliminar Correos Autorizados,Funcional,Manual
+CP-113,Solo Admins Gestionan Lista Blanca,Aceptación,Manual
+CP-114,Integración Lista Blanca con Autenticación,Integración,Automatizada
+CP-115,Tiempo de Actualización de Lista Blanca,No funcionales,Automatizada
+CP-116,Validación de Clave de API,Unitaria,Automatizada
+CP-117,Configuración de Modelo de IA,Funcional,Manual
+CP-118,Solo Admins Configuran el Sistema,Aceptación,Manual
+CP-119,Integración Configuración con Tutor IA,Integración,Automatizada
+CP-120,Tiempo de Aplicación de Configuración,No funcionales,Automatizada

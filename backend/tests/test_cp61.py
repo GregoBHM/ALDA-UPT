@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 import models
-from schemas.teacher import LabCreateRequest, TestCaseCreateRequest
+from schemas.teacher import LabCreateRequest, TestCaseCreateRequest as CaseCreateRequest
 from services.teacher_service import TeacherService
 
 
@@ -40,9 +40,9 @@ def solicitud_ejemplo(titulo="Prueba QA - Suma de dos números"):
         difficulty="medium",
         is_exam=False,
         test_cases=[
-            TestCaseCreateRequest(input_data="2 3", expected_output="5", is_hidden=False),
-            TestCaseCreateRequest(input_data="10 20", expected_output="30", is_hidden=False),
-            TestCaseCreateRequest(input_data="-5 8", expected_output="3", is_hidden=True),
+            CaseCreateRequest(input_data="2 3", expected_output="5", is_hidden=False),
+            CaseCreateRequest(input_data="10 20", expected_output="30", is_hidden=False),
+            CaseCreateRequest(input_data="-5 8", expected_output="3", is_hidden=True),
         ],
     )
 
@@ -83,7 +83,7 @@ def test_cp61_registra_tres_casos_y_uno_oculto(db_simulada):
 def test_cp61_aplica_valores_predeterminados(db_simulada):
     solicitud = LabCreateRequest(
         title="Reto predeterminado",
-        test_cases=[TestCaseCreateRequest(input_data="1", expected_output="2")],
+        test_cases=[CaseCreateRequest(input_data="1", expected_output="2")],
     )
     TeacherService().create_lab(db_simulada, uuid4(), solicitud)
     laboratorio, caso = [x.args[0] for x in db_simulada.add.call_args_list]

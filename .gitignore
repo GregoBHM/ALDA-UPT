@@ -44,3 +44,6 @@ Thumbs.db
 
 # ── Logs ──────────────────────────────────────────────────
 *.log
+
+# Resultados generados por la suite QA
+/qa-resultados/
