@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Visor de pruebas · ALDA-UPT</title>
+<style>
+:root{font-family:"Segoe UI",system-ui,sans-serif;color:#17273c;background:#eef2f6;line-height:1.55;--ink:#17273c;--muted:#495d72;--line:#d9e2eb;--accent:#175a8e}
+*{box-sizing:border-box}
+body{margin:0}
+a{color:var(--accent);text-underline-offset:.22em}
+a:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #4088c8;outline-offset:3px}
+header{background:#14263c;color:#f4f8fc;padding:2.25rem max(1rem,calc((100vw - 72rem)/2))}
+.brand{font-weight:700;color:#a9c8e4}
+h1,h2,h3,p{margin:0}
+h1{font-size:clamp(1.8rem,4vw,2.7rem);letter-spacing:-.04em;line-height:1.2;margin:.3rem 0 .7rem}
+header p,header a{color:#caddf0}
+.meta{display:flex;flex-wrap:wrap;gap:.35rem 1.15rem;font-size:.9rem}
+main{max-width:74rem;margin:auto;padding:1.4rem 1rem 3rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;margin-bottom:1rem}
+.stat,.panel{background:white;border:1px solid var(--line);border-radius:.85rem}
+.stat{padding:.7rem 1rem;display:grid;gap:.05rem}
+.stat strong{font-size:1.6rem;font-variant-numeric:tabular-nums}
+.stat span,.hint,.sub{color:var(--muted);font-size:.9rem}
+.layout{display:grid;grid-template-columns:minmax(14rem,1fr) minmax(0,2.4fr);gap:1rem;align-items:start}
+.panel{padding:1.15rem}
+label{display:block;font-weight:650;margin:.9rem 0 .3rem}
+select{font:inherit;color:var(--ink);background:#fff;border:1px solid #a5b6c8;border-radius:.45rem;padding:.55rem;width:100%;min-width:0}
+.hint{margin-top:.65rem}
+.case-head{display:flex;gap:.7rem;align-items:start;justify-content:space-between}
+.code{font-weight:750;font-size:.86rem;color:var(--accent);margin-bottom:.2rem}
+h2{font-size:clamp(1.2rem,3vw,1.55rem);line-height:1.26}
+h3{font-size:1rem}
+.sub{margin:.35rem 0 .85rem}
+.badge{font-size:.75rem;font-weight:750;border-radius:1rem;padding:.25rem .57rem;display:inline-block;background:#e8eff6;color:#304760;white-space:nowrap}
+[data-status="PASSED"]{background:#def3e5;color:#145738}
+[data-status="FAILED"]{background:#fce5e3;color:#8a2327}
+[data-status="XFAIL"]{background:#fff1cf;color:#6e4900}
+.note{margin-top:.75rem;padding:.7rem .8rem;background:#eef5fb;border-radius:.45rem}
+.variants{list-style:none;padding:0;margin:.7rem 0 0;display:grid;gap:.55rem}
+.variant{padding:.7rem;border:1px solid var(--line);border-radius:.55rem;overflow-wrap:anywhere}
+.variant h3{margin:.25rem 0}
+.variant small{color:var(--muted)}
+.evidence{display:flex;flex-wrap:wrap;gap:.35rem .8rem;margin-top:.65rem;font-size:.88rem}
+dt{font-weight:700}dd{margin:0 0 .4rem}dl{margin:.55rem 0 .2rem}
+ol{margin:.25rem 0 .6rem;padding-left:1.5rem}
+@media(max-width:680px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}header{padding:1.25rem 1rem}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ALDA-UPT</div>
+  <h1>Visor de pruebas automatizadas</h1>
+  <div class="meta" id="execution"></div>
+</header>
+<main>
+  <section class="stats" id="stats" aria-label="Totales de verificaciones"></section>
+  <div class="layout">
+    <section class="panel" aria-label="Selección de prueba">
+      <label for="cu">Caso de uso</label>
+      <select id="cu"></select>
+      <label for="cp">Caso de prueba</label>
+      <select id="cp"></select>
+      <p class="hint">El estado corresponde a la ejecución identificada arriba. El catálogo incluye pruebas previstas que todavía están pendientes.</p>
+    </section>
+    <section class="panel" id="detail" aria-label="Resultado de la prueba" aria-live="polite"></section>
+  </div>
+</main>
+<script type="application/json" id="report-data">__ALDA_REPORT_DATA__</script>
+<script>
+const data = JSON.parse(document.getElementById('report-data').textContent);
+const cu = document.getElementById('cu');
+const cp = document.getElementById('cp');
+const detail = document.getElementById('detail');
+const titles = {PASSED:'Aprobadas', FAILED:'Fallidas', XFAIL:'Fallos esperados', SKIPPED:'Omitidas'};
+const observed = {
+  PASSED:'Se cumplieron las comprobaciones ejecutadas.',
+  FAILED:'Al menos una comprobación falló o la prueba encontró un error.',
+  XFAIL:'Se observó el fallo esperado declarado por la prueba.',
+  SKIPPED:'La prueba fue omitida durante la ejecución.'
+};
+function tag(name, text, className) {
+  const element = document.createElement(name);
+  element.textContent = text;
+  if (className) element.className = className;
+  return element;
+}
+function link(text, href) {
+  const element = tag('a', text);
+  element.href = href;
+  return element;
+}
+function badge(status) {
+  const element = tag('span', status, 'badge');
+  element.dataset.status = status;
+  return element;
+}
+const execution = document.getElementById('execution');
+if (data.runUrl) execution.append(link('Ejecución #' + data.runNumber + ' en GitHub Actions', data.runUrl));
+else execution.append(tag('span', 'Ejecución local'));
+if (data.commitUrl) execution.append(link('Commit ' + data.commit.slice(0,7), data.commitUrl));
+for (const [status, title] of Object.entries(titles)) {
+  const stat = tag('div', '', 'stat');
+  stat.append(tag('strong', data.counts[status] || 0), tag('span', title));
+  document.getElementById('stats').append(stat);
+}
+const modules = new Map();
+for (const use of data.uses) {
+  if (!modules.has(use.module)) {
+    const group = document.createElement('optgroup');
+    group.label = use.module;
+    modules.set(use.module, group);
+    cu.append(group);
+  }
+  modules.get(use.module).append(new Option(use.id + ' · ' + use.name, use.id));
+}
+function render() {
+  const use = data.uses.find(item => item.id === cu.value);
+  const item = use.cases.find(test => test.id === cp.value);
+  detail.replaceChildren();
+  if (!item) {
+    detail.append(tag('h2', 'Sin casos automatizados disponibles para este caso de uso.'));
+    return;
+  }
+  const head = tag('div', '', 'case-head');
+  const title = tag('div', '');
+  title.append(tag('p', use.id + ' / ' + item.id, 'code'), tag('h2', item.title));
+  head.append(title, badge(item.status));
+  detail.append(head, tag('p', item.type + ' · ' + item.origin, 'sub'));
+  const description = item.description;
+  if (description) {
+    detail.append(tag('h3', 'Escenario y criterio'));
+    if (description.steps) {
+      const steps = tag('ol', '');
+      for (const step of description.steps) steps.append(tag('li', step));
+      detail.append(steps);
+    }
+    const definition = tag('dl', '');
+    definition.append(tag('dt', 'Resultado esperado'), tag('dd', description.expected));
+    detail.append(definition);
+  }
+  if (!item.variants.length) {
+    detail.append(tag('p', 'Sin evidencia de ejecución automática en este registro.', 'note'));
+    return;
+  }
+  detail.append(tag('h3', 'Resultados de la ejecución'));
+  const variants = tag('ul', '', 'variants');
+  for (const variant of item.variants) {
+    const row = tag('li', '', 'variant');
+    row.append(badge(variant.status), tag('h3', variant.name),
+      tag('small', variant.scope + (variant.duration ? ' · ' + variant.duration + ' s' : '')));
+    const actual = description?.actual?.[variant.status] || observed[variant.status];
+    row.append(tag('p', actual));
+    const evidence = tag('div', '', 'evidence');
+    if (data.runUrl) evidence.append(link('Ver registro de ejecución', data.runUrl));
+    if (variant.sourceUrl) evidence.append(link('Ver código y comprobaciones', variant.sourceUrl));
+    if (evidence.childElementCount) row.append(evidence);
+    variants.append(row);
+  }
+  detail.append(variants);
+}
+function selectUse(preferred) {
+  const use = data.uses.find(item => item.id === cu.value);
+  cp.replaceChildren(...use.cases.map(item => new Option(item.id + ' · ' + item.title, item.id)));
+  if (use.cases.some(item => item.id === preferred)) cp.value = preferred;
+  else cp.value = (use.cases.find(item => item.variants.length) || use.cases[0])?.id || '';
+  render();
+}
+function updateLocation() {
+  location.hash = new URLSearchParams({cu:cu.value,cp:cp.value});
+}
+function readLocation() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  const use = data.uses.find(item => item.id === params.get('cu'));
+  cu.value = use?.id || data.uses[0].id;
+  selectUse(params.get('cp'));
+}
+cu.addEventListener('change', () => {selectUse();updateLocation();});
+cp.addEventListener('change', () => {render();updateLocation();});
+addEventListener('hashchange', readLocation);
+readLocation();
+</script>
+</body>
+</html>

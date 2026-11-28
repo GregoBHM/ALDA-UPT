@@ -4,6 +4,12 @@ Un solo workflow, [Pruebas automatizadas ALDA-UPT](../.github/workflows/alda-qa.
 
 El [índice de pruebas previstas](automatizadas.md) enumera las 71 pruebas clasificadas como automatizadas en el [catálogo original](https://github.com/GregoBHM/ALDA-UPT/blob/7e04aa09890e7b6ed498c2c19bebb6be311258e3/CatalogoPruebas.md). La trazabilidad usa bloques de cinco CP por cada CU, desde CP-01 a CP-05 para CU-01 hasta CP-116 a CP-120 para CU-24. Las verificaciones que ya automatizan un caso originalmente manual también se muestran cuando tienen resultados.
 
+## Visor para la sustentación
+
+En una ejecución de GitHub Actions, descarga el artefacto `resultados-pruebas-alda`, extrae el ZIP y abre `index.html`. Selecciona un caso de uso y un CP. El enlace incorpora ambos IDs para regresar a la misma selección. En las pruebas de Chromium, las trazas ZIP están en `trazas/` dentro del mismo artefacto. Puedes abrir una con `npx playwright show-trace <archivo.zip>` desde `frontend`.
+
+El mismo workflow publica el visor cuando GitHub Pages está configurado con **Settings → Pages → Source → GitHub Actions** y se ejecuta un push a `main`. La página muestra resultados, tiempos y enlaces. Los logs completos y las trazas quedan en el artefacto de Actions.
+
 ## Agregar una prueba
 
 En pytest, escribe el ID en el nombre del test como `test_cp61_...`. En navegador, incluye `CP-61` en el título. Si una prueba verifica requisitos de dos casos, incluye ambos IDs. El resumen lee los resultados JUnit y asigna cada comprobación a su CU. Los archivos de pruebas pueden organizarse por módulo o CU dentro de sus suites. El workflow se mantiene en un solo YAML.

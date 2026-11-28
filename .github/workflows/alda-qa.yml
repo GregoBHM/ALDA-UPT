@@ -30,6 +30,8 @@ jobs:
           --health-retries 10
     env:
       ALDA_TEST_DATABASE_URL: postgresql+pg8000://alda_qa:alda_qa_local@127.0.0.1:5432/alda_qa
+    outputs:
+      pages_ready: ${{ steps.pages_upload.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -71,6 +73,8 @@ jobs:
           npm run build
           npx playwright install --with-deps chromium
       - name: Ejecutar pruebas de interfaz
+        env:
+          ALDA_TRACE_DIR: ${{ github.workspace }}/qa-resultados/trazas
         if: ${{ !cancelled() && steps.frontend_build.outcome == 'success' }}
         shell: bash
         run: |
@@ -92,3 +96,41 @@ jobs:
         with:
           name: resultados-pruebas-alda
           path: qa-resultados/
+
+
+      - name: Preparar solo el visor para GitHub Pages
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        id: pages_package
+        run: |
+          mkdir -p qa-pages
+          cp qa-resultados/index.html qa-pages/index.html
+      - name: Guardar sitio para GitHub Pages
+        id: pages_upload
+        if: ${{ !cancelled() && steps.pages_package.outcome == 'success' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: qa-pages
+
+  publicar-visor:
+    if: ${{ !cancelled() && needs.pruebas.outputs.pages_ready == 'true' }}
+    needs: pruebas
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency: alda-github-pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Verificar configuración de GitHub Pages
+        id: configure
+        uses: actions/configure-pages@v5
+        continue-on-error: true
+      - name: Publicar visor
+        if: steps.configure.outcome == 'success'
+        id: deploy
+        uses: actions/deploy-pages@v4
+      - name: Indicar que Pages requiere configuración
+        if: steps.configure.outcome == 'failure'
+        run: echo 'Activa GitHub Actions como origen en Settings → Pages. El visor también está en el artefacto resultados-pruebas-alda.' >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,28 @@
+{
+  "CP-21": {
+    "steps": ["Enviar un programa C++ con un error de sintaxis.", "Comprobar que el compilador devuelve un diagnóstico y que la evaluación no se registra."],
+    "expected": "La API devuelve un diagnóstico de compilación y una lista de resultados vacía.",
+    "actual": {"PASSED": "La respuesta incluyó el error de compilación y no se registró un intento de evaluación."}
+  },
+  "CP-35": {
+    "steps": ["Abrir la sesión de QA del tutor.", "Medir 10 respuestas completas."],
+    "expected": "Cada respuesta completa debe terminar en menos de 15 segundos."
+  },
+  "CP-46": {
+    "expected": "El backend debe rechazar anuncios con un título vacío, un título de solo espacios o contenido demasiado corto.",
+    "actual": {"XFAIL": "El backend aceptó el anuncio inválido en esta variante."}
+  },
+  "CP-63": {
+    "expected": "El backend debe rechazar un laboratorio que no incluye casos de prueba.",
+    "actual": {"XFAIL": "El backend aceptó la creación del laboratorio sin casos de prueba."}
+  },
+  "CP-97": {
+    "steps": ["Abrir el panel de Estado del Sistema como administrador.", "Comprobar que muestra dos de tres servicios activos.", "Simular la recuperación del tutor y pulsar Verificar."],
+    "expected": "El panel debe mostrar 3 / 3 servicios activos y retirar el indicador de servicio desconectado.",
+    "actual": {"PASSED": "Chromium confirmó que el contador cambió de 2 / 3 a 3 / 3 con respuestas simuladas."}
+  },
+  "CP-111": {
+    "expected": "La lista blanca debe rechazar una dirección de correo con un formato inválido.",
+    "actual": {"XFAIL": "El endpoint aceptó el correo con formato inválido."}
+  }
+}

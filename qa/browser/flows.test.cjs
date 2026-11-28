@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const { mkdir } = require('node:fs/promises');
+const { join } = require('node:path');
 const { before, after, test } = require('node:test');
 const { chromium } = require('playwright');
 
@@ -6,7 +8,9 @@ const baseUrl = process.env.ALDA_BROWSER_URL || 'http://127.0.0.1:4173';
 const userFor = (role) => ({
   id: `qa-${role}`, email: `${role}@example.test`, name: `Cuenta QA ${role}`, role, is_active: true,
 });
+const traceDir = process.env.ALDA_TRACE_DIR;
 let browser;
+let traceNumber = 0;
 
 before(async () => {
   browser = await chromium.launch({ executablePath: process.env.ALDA_CHROMIUM_PATH });
@@ -15,7 +19,22 @@ after(async () => browser?.close());
 
 async function dashboard(t, role, handleApi) {
   const context = await browser.newContext({ baseURL: baseUrl });
-  t.after(() => context.close());
+  let traceStarted = false;
+  t.after(async () => {
+    try {
+      if (traceStarted) {
+        const safeTitle = t.name.normalize('NFD').replace(/[^a-zA-Z0-9 -]/g, '').replace(/ +/g, '-');
+        await context.tracing.stop({ path: join(traceDir, safeTitle + '-' + ++traceNumber + '.zip') });
+      }
+    } finally {
+      await context.close();
+    }
+  });
+  if (traceDir) {
+    await mkdir(traceDir, { recursive: true });
+    await context.tracing.start({ screenshots: true, snapshots: true });
+    traceStarted = true;
+  }
   const user = userFor(role);
   await context.addInitScript((account) => {
     sessionStorage.setItem('user', JSON.stringify(account));
