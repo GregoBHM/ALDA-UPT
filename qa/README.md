@@ -1,6 +1,6 @@
 # Pruebas de ALDA-UPT
 
-Un solo workflow, [Pruebas automatizadas ALDA-UPT](../.github/workflows/alda-qa.yml), ejecuta las suites en pushes a `main` y a ramas `qa/**` y en pull requests hacia `main`. Abre **Summary** en la ejecución para ver los 24 casos de uso y las verificaciones automatizadas que tienen resultados. El artefacto `resultados-pruebas-alda` incluye los XML JUnit y el reporte agrupado en Markdown y CSV.
+Un solo workflow, [Pruebas automatizadas ALDA-UPT](../.github/workflows/alda-qa.yml), ejecuta las suites en pushes a `main` y a ramas `qa/**` y en pull requests hacia `main`. En **Summary**, la tabla **Resultado de cada prueba ejecutada** muestra el nombre, estado (`PASSED`, `FAILED`, `XFAIL` o `SKIPPED`), duración y motivo. Más abajo se muestran los resultados agrupados por los 24 casos de uso. El artefacto `resultados-pruebas-alda` incluye `pruebas-individuales.csv`, los logs de pytest y Chromium, los XML JUnit y el reporte agrupado.
 
 El [índice de pruebas previstas](automatizadas.md) enumera las 71 pruebas clasificadas como automatizadas en el [catálogo original](https://github.com/GregoBHM/ALDA-UPT/blob/7e04aa09890e7b6ed498c2c19bebb6be311258e3/CatalogoPruebas.md). La trazabilidad usa bloques de cinco CP por cada CU, desde CP-01 a CP-05 para CU-01 hasta CP-116 a CP-120 para CU-24. Las verificaciones que ya automatizan un caso originalmente manual también se muestran cuando tienen resultados.
 
@@ -23,7 +23,7 @@ Usa Python 3.12 y Node.js 24. Desde la raíz del repositorio, ejecuta el backend
 mkdir -p qa-resultados
 cd backend
 python -m pip install -r requirements.txt pytest==9.2.0 httpx==0.28.1
-python -m pytest -ra --junitxml=../qa-resultados/backend.xml
+python -m pytest -v -ra -o junit_logging=out-err --junitxml=../qa-resultados/backend.xml
 ```
 
 En otra terminal, desde la raíz, compila el frontend y déjalo en ejecución.

@@ -51,7 +51,11 @@ jobs:
         run: docker pull gcc:12
       - name: Ejecutar pytest con PostgreSQL temporal
         working-directory: backend
-        run: python -m pytest -ra --junitxml=../qa-resultados/backend.xml
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest -v -ra -o junit_logging=out-err --color=no \
+            --junitxml=../qa-resultados/backend.xml 2>&1 | tee ../qa-resultados/pytest.log
       - name: Instalar dependencias del frontend
         if: success() || failure()
         id: frontend_deps
@@ -78,7 +82,7 @@ jobs:
           NODE_PATH="$PWD/frontend/node_modules" node --test \
             --test-reporter=spec --test-reporter-destination=stdout \
             --test-reporter=junit --test-reporter-destination=qa-resultados/browser.xml \
-            qa/browser/flows.test.cjs
+            qa/browser/flows.test.cjs 2>&1 | tee qa-resultados/chromium.log
       - name: Publicar resultados automatizados por caso de uso
         if: always()
         run: python qa/report.py qa-resultados/backend.xml qa-resultados/browser.xml qa-resultados
