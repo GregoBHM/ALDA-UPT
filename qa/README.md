@@ -8,7 +8,7 @@ El [índice de pruebas previstas](automatizadas.md) enumera las 71 pruebas clasi
 
 En una ejecución de GitHub Actions, descarga el artefacto `resultados-pruebas-alda`, extrae el ZIP y abre `index.html`. Selecciona un caso de uso y un CP. El enlace incorpora ambos IDs para regresar a la misma selección. En las pruebas de Chromium, las trazas ZIP están en `trazas/` dentro del mismo artefacto. Puedes abrir una con `npx playwright show-trace <archivo.zip>` desde `frontend`.
 
-El mismo workflow publica el visor cuando GitHub Pages está configurado con **Settings → Pages → Source → GitHub Actions** y se ejecuta un push a `main`. La página muestra resultados, tiempos y enlaces. Los logs completos y las trazas quedan en el artefacto de Actions.
+El mismo workflow publica el visor cuando GitHub Pages está configurado con **Settings → Pages → Source → GitHub Actions** y se ejecuta en `main` mediante un push o con **Actions → Pruebas automatizadas ALDA-UPT → Run workflow**. La página muestra resultados, tiempos y enlaces. Los logs completos y las trazas quedan en el artefacto de Actions.
 
 ## Agregar una prueba
 
