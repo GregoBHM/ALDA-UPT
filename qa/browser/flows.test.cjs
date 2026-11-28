@@ -24,9 +24,10 @@ async function dashboard(t, role, handleApi) {
     const request = route.request();
     const url = new URL(request.url());
     if (url.origin !== new URL(baseUrl).origin) return route.abort();
-    if (!url.pathname.startsWith('/api/')) return route.continue();
+    if (!url.pathname.startsWith('/api/') && url.pathname !== '/docs') return route.continue();
     if (url.pathname === '/api/auth/me') return route.fulfill({ json: user });
     const result = await handleApi(url.pathname, request);
+    if (result instanceof Error) return route.abort();
     if (result !== undefined) return route.fulfill({ json: result });
     if (url.pathname === '/api/student/announcements') return route.fulfill({ json: [] });
     return route.fulfill({ status: 404, json: { detail: 'Ruta ausente de los datos de prueba' } });
@@ -131,4 +132,22 @@ test('CP-102 CP-107 actualiza el rol y el estado desde Gestión de Usuarios', as
   await row.getByRole('button', { name: 'Suspendido' }).waitFor();
   await row.getByRole('button', { name: 'Suspendido' }).click();
   await row.getByRole('button', { name: 'Activo', exact: true }).waitFor();
+});
+
+
+test('CP-97 muestra el estado y actualiza el conteo desde el panel', async (t) => {
+  let assistantOnline = false;
+  const page = await dashboard(t, 'admin', (path) => {
+    if (path === '/docs') return {};
+    if (path === '/api/admin/users') return [];
+    if (path === '/api/student/assistant') return assistantOnline ? {} : new Error('Servicio sin conexión');
+  });
+  await page.getByRole('button', { name: 'Estado del Sistema', exact: true }).click();
+  await page.getByRole('heading', { name: 'Estado del Sistema' }).waitFor();
+  await page.getByText('2 / 3', { exact: true }).waitFor();
+  await page.getByText('Offline', { exact: true }).waitFor();
+  assistantOnline = true;
+  await page.getByRole('button', { name: 'Verificar', exact: true }).click();
+  await page.getByText('3 / 3', { exact: true }).waitFor();
+  await page.getByText('Offline', { exact: true }).waitFor({ state: 'hidden' });
 });
