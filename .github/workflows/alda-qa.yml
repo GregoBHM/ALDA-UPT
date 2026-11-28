@@ -99,7 +99,7 @@ jobs:
 
 
       - name: Preparar solo el visor para GitHub Pages
-        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
         id: pages_package
         run: |
           mkdir -p qa-pages
@@ -125,12 +125,34 @@ jobs:
     steps:
       - name: Verificar configuración de GitHub Pages
         id: configure
-        uses: actions/configure-pages@v5
-        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          response=$(mktemp)
+          trap 'rm -f "$response"' EXIT
+          status=$(curl --silent --show-error --output "$response" --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages")
+          case "$status" in
+            200)
+              if [[ $(jq -r '.build_type' "$response") == workflow ]]; then
+                echo 'ready=true' >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              ;;
+            404) ;;
+            *)
+              echo "::error::No se pudo consultar GitHub Pages (HTTP $status)."
+              exit 1
+              ;;
+          esac
+          echo 'ready=false' >> "$GITHUB_OUTPUT"
+          echo '::warning::Activa GitHub Actions como origen en Settings → Pages.'
+          echo 'El visor está disponible en resultados-pruebas-alda. Para publicarlo, selecciona GitHub Actions en Settings → Pages y ejecuta este workflow en main.' >> "$GITHUB_STEP_SUMMARY"
       - name: Publicar visor
-        if: steps.configure.outcome == 'success'
+        if: steps.configure.outputs.ready == 'true'
         id: deploy
         uses: actions/deploy-pages@v4
-      - name: Indicar que Pages requiere configuración
-        if: steps.configure.outcome == 'failure'
-        run: echo 'Activa GitHub Actions como origen en Settings → Pages. El visor también está en el artefacto resultados-pruebas-alda.' >> "$GITHUB_STEP_SUMMARY"
