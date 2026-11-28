@@ -4,6 +4,7 @@ import csv
 import os
 import re
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -11,6 +12,23 @@ from xml.etree import ElementTree
 CASE_ID = re.compile(r"\bcp[-_]?(\d{2,3})\b", re.IGNORECASE)
 STATUSES = ("Falla", "Falla esperada", "Omitida", "Aprobada")
 QA_DIR = Path(__file__).resolve().parent
+RESULT_LABELS = {
+    "Falla": "FAILED",
+    "Falla esperada": "XFAIL",
+    "Omitida": "SKIPPED",
+    "Aprobada": "PASSED",
+}
+
+
+@dataclass(frozen=True)
+class TestResult:
+    name: str
+    case_ids: tuple[str, ...]
+    scope: str
+    status: str
+    duration: str
+    reason: str
+    output: str
 
 
 def load_csv(name, key):
@@ -18,23 +36,84 @@ def load_csv(name, key):
         return {row[key]: row for row in csv.DictReader(source)}
 
 
-def read_results(report, scope, checks):
+def read_results(report, scope):
     if not report.exists():
-        return False
+        return None
+    results = []
     for case in ElementTree.parse(report).getroot().iter("testcase"):
         name = case.get("name", "")
-        ids = {f"CP-{int(number):02d}" for number in CASE_ID.findall(name.replace("_", " "))}
-        skipped = case.find("skipped")
-        if case.find("failure") is not None or case.find("error") is not None:
+        case_ids = tuple(dict.fromkeys(
+            f"CP-{int(number):02d}" for number in CASE_ID.findall(name.replace("_", " "))
+        ))
+        module = case.get("classname", "")
+        problem = case.find("failure")
+        if problem is None:
+            problem = case.find("error")
+        if problem is not None:
             status = "Falla"
-        elif skipped is not None:
-            status = "Falla esperada" if skipped.get("type") == "pytest.xfail" else "Omitida"
         else:
-            status = "Aprobada"
-        for case_id in ids:
-            case_scope = f"{scope}, compilador C++ en Docker" if "qa_compiler" in case.get("classname", "") else scope
-            checks[case_id].append((status, case_scope))
-    return True
+            problem = case.find("skipped")
+            if problem is None:
+                status = "Aprobada"
+            else:
+                status = "Falla esperada" if problem.get("type") == "pytest.xfail" else "Omitida"
+
+        messages = []
+        reason = ""
+        if problem is not None:
+            reason = problem.get("message") or (problem.text or "").strip()
+            if problem.text:
+                messages.append(problem.text.strip())
+        for tag in ("system-out", "system-err"):
+            message = case.findtext(tag)
+            if message and message.strip():
+                messages.append(message.strip())
+        results.append(TestResult(
+            name=f"{module}::{name}" if module and module != "test" else name,
+            case_ids=case_ids,
+            scope=f"{scope}, compilador C++ en Docker" if "qa_compiler" in module else scope,
+            status=status,
+            duration=case.get("time", ""),
+            reason=reason,
+            output="\n\n".join(messages),
+        ))
+    return results
+
+
+def markdown_cell(value):
+    return (
+        " ".join(value.split())
+        .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        .replace("\x60", "&#96;").replace("|", "&#124;")
+    )
+
+
+def write_details(report_dir, results):
+    columns = ["prueba", "casos", "estado", "duracion_segundos", "suite", "motivo", "salida"]
+    with (report_dir / "pruebas-individuales.csv").open("w", encoding="utf-8", newline="") as target:
+        writer = csv.writer(target)
+        writer.writerow(columns)
+        writer.writerows(
+            [result.name, ", ".join(result.case_ids), RESULT_LABELS[result.status],
+             result.duration, result.scope, result.reason, result.output]
+            for result in results
+        )
+
+    lines = [
+        "## Resultado de cada prueba ejecutada", "",
+        "| Prueba | Casos | Resultado | Duración (s) | Suite | Detalle |",
+        "| --- | --- | --- | ---: | --- | --- |",
+    ]
+    for result in results:
+        reason = " ".join(result.reason.split())
+        if len(reason) > 200:
+            reason = reason[:197] + "…"
+        cells = [result.name, ", ".join(result.case_ids), RESULT_LABELS[result.status],
+                 result.duration, result.scope, reason]
+        lines.append("| " + " | ".join(markdown_cell(cell) for cell in cells) + " |")
+    if not results:
+        lines = [*lines[:2], "Esta ejecución no produjo resultados JUnit."]
+    return lines
 
 
 def group_cases(catalog, use_cases, checks):
@@ -66,10 +145,14 @@ def main():
 
     catalog = load_csv("catalogo.csv", "id")
     use_cases = load_csv("casos-de-uso.csv", "cu")
-    checks = defaultdict(list)
     storage = "PostgreSQL" if os.environ.get("ALDA_TEST_DATABASE_URL") else "SQLite"
-    backend_available = read_results(args.backend, f"Backend, {storage}", checks)
-    browser_available = read_results(args.browser, "Chromium, API simulada", checks)
+    backend = read_results(args.backend, f"Backend, {storage}")
+    browser = read_results(args.browser, "Chromium, API simulada")
+    results = (backend or []) + (browser or [])
+    checks = defaultdict(list)
+    for result in results:
+        for case_id in result.case_ids:
+            checks[case_id].append((result.status, result.scope))
     groups = group_cases(catalog, use_cases, checks)
     rows = [row for group in groups.values() for row in group]
     counts = Counter(row["estado_ci"] for row in rows)
@@ -92,14 +175,16 @@ def main():
         "",
         f"- {len(planned & checks.keys())} casos del plan automatizado con resultados y {len(planned_pending)} pendientes en esta ejecución.",
         f"- {len(checks.keys() - planned)} casos inicialmente manuales con verificaciones automatizadas.",
-        f"- Backend: {'JUnit disponible' if backend_available else 'sin informe JUnit'}.",
-        f"- Navegador: {'JUnit disponible' if browser_available else 'sin informe JUnit'}.",
+        f"- Backend: {'JUnit disponible' if backend is not None else 'sin informe JUnit'}.",
+        f"- Navegador: {'JUnit disponible' if browser is not None else 'sin informe JUnit'}.",
         "",
         "Los resultados describen las verificaciones ejecutadas y pueden cubrir parte del escenario documentado.",
         f"[Ver las {len(planned)} pruebas previstas en el catálogo, agrupadas por caso de uso]({index_link}).",
         "",
     ]
     lines.extend(f"- {status}: {counts[status]}" for status in STATUSES if counts[status])
+    lines.extend(["", *write_details(args.report_dir, results), "",
+                  "El artefacto incluye la salida de consola y el CSV con el diagnóstico completo."])
     for code, case in use_cases.items():
         lines.extend(["", f"## {code} · {case['caso_de_uso']}", ""])
         if not groups[code]:
