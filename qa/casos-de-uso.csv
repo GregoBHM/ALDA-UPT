@@ -1,0 +1,25 @@
+cu,modulo,caso_de_uso
+CU-01,Autenticación,Iniciar sesión con cuenta Google
+CU-02,Autenticación,Validar acceso por dominio institucional
+CU-03,Estudiante,Consultar panel de progreso personal
+CU-04,Estudiante,Explorar catálogo de retos disponibles
+CU-05,Estudiante,Escribir y ejecutar código en el editor
+CU-06,Estudiante,Evaluar código con casos de prueba
+CU-07,Estudiante,Solicitar guía al tutor inteligente
+CU-08,Estudiante,Calificar respuesta del tutor de IA
+CU-09,Estudiante,Consultar historial de intentos
+CU-10,Estudiante,Visualizar anuncios del docente
+CU-11,Docente,Consultar panel de estadísticas de clase
+CU-12,Docente,Revisar análisis de errores frecuentes
+CU-13,Docente,Crear laboratorio con casos de prueba
+CU-14,Docente,Eliminar laboratorio propio
+CU-15,Docente,Publicar anuncio académico
+CU-16,Docente,Eliminar anuncio propio
+CU-17,Docente,Cargar material pedagógico para la IA
+CU-18,Docente,Eliminar material de la base de conocimiento
+CU-19,Docente,Generar reporte de calificaciones (PDF y Excel)
+CU-20,Administrador,Consultar estado general de la plataforma
+CU-21,Administrador,Cambiar rol de un usuario
+CU-22,Administrador,Suspender o reactivar acceso de un usuario
+CU-23,Administrador,Gestionar lista de correos autorizados
+CU-24,Administrador,Configurar modelo de IA y claves del sistema

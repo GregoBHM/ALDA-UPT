@@ -1,15 +1,19 @@
 # Pruebas de ALDA-UPT
 
-GitHub Actions ejecuta las suites en pushes a `main` y a ramas `qa/**` y en pull requests hacia `main`. Abre **Pruebas ALDA-UPT** para consultar el resumen y descargar el artefacto `resultados-pruebas-alda`, que incluye los dos XML JUnit y el resultado por caso en Markdown y CSV.
+Un solo workflow, [Pruebas automatizadas ALDA-UPT](../.github/workflows/alda-qa.yml), ejecuta las suites en pushes a `main` y a ramas `qa/**` y en pull requests hacia `main`. Abre **Summary** en la ejecución para ver los 24 casos de uso y las verificaciones automatizadas que tienen resultados. El artefacto `resultados-pruebas-alda` incluye los XML JUnit y el reporte agrupado en Markdown y CSV.
 
-La matriz de 120 casos deriva de [CatalogoPruebas.md](https://github.com/GregoBHM/ALDA-UPT/blob/7e04aa09890e7b6ed498c2c19bebb6be311258e3/CatalogoPruebas.md). La columna `modo_documentado` conserva la clasificación original. El estado de CI se calcula con los XML generados en la ejecución. Una prueba puede cubrir varios casos y un caso puede tener varias verificaciones. La columna de alcance indica qué suite aportó el resultado.
+El [índice de pruebas previstas](automatizadas.md) enumera las 71 pruebas clasificadas como automatizadas en el [catálogo original](https://github.com/GregoBHM/ALDA-UPT/blob/7e04aa09890e7b6ed498c2c19bebb6be311258e3/CatalogoPruebas.md). La trazabilidad usa bloques de cinco CP por cada CU, desde CP-01 a CP-05 para CU-01 hasta CP-116 a CP-120 para CU-24. Las verificaciones que ya automatizan un caso originalmente manual también se muestran cuando tienen resultados.
+
+## Agregar una prueba
+
+En pytest, escribe el ID en el nombre del test como `test_cp61_...`. En navegador, incluye `CP-61` en el título. Si una prueba verifica requisitos de dos casos, incluye ambos IDs. El resumen lee los resultados JUnit y asigna cada comprobación a su CU. Los archivos de pruebas pueden organizarse por módulo o CU dentro de sus suites. El workflow se mantiene en un solo YAML.
 
 ## Entornos
 
-- **Backend.** Pytest prueba servicios y endpoints. GitHub Actions levanta PostgreSQL y cada prueba que necesita persistencia usa un esquema temporal. Localmente se usa un archivo SQLite temporal por prueba si falta `ALDA_TEST_DATABASE_URL`. OAuth y el proveedor del tutor se simulan en los escenarios correspondientes.
+- **Backend.** Pytest prueba servicios y endpoints. GitHub Actions levanta PostgreSQL y cada prueba que necesita persistencia usa un esquema temporal. Localmente se usa un archivo SQLite temporal por prueba si falta `ALDA_TEST_DATABASE_URL`. La suite del compilador ejecuta programas C++ de prueba con la imagen `gcc:12`. Para reproducirla localmente con Docker, ejecuta `docker pull gcc:12` antes de pytest. OAuth y el proveedor del tutor se simulan en los escenarios correspondientes.
 - **Navegador.** Playwright usa el frontend compilado en Chromium con respuestas HTTP simuladas. Comprueba los controles y resultados visibles en perfiles de estudiante, docente y administrador.
 - **Fallos esperados.** CP-46, CP-63 y CP-111 reproducen validaciones ausentes. Pytest registra el fallo esperado y obliga a actualizar el test si empieza a aprobar. El resumen conserva ese estado.
-- **Pendientes.** El reporte identifica los casos sin resultados de CI. Las pruebas con el proveedor real del tutor, la aceptación pedagógica y los tiempos del sistema requieren evidencia del entorno correspondiente. El [procedimiento CU-07](cu07/README.md) describe cómo medir esos escenarios.
+- **Pendientes.** El resumen cuenta los casos previstos sin resultados de CI y enlaza al índice. Las pruebas con el proveedor real del tutor, la aceptación pedagógica y los tiempos del sistema requieren evidencia del entorno correspondiente. El [procedimiento CU-07](cu07/README.md) describe cómo medir esos escenarios.
 
 ## Ejecutar localmente
 

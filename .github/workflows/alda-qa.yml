@@ -1,4 +1,4 @@
-name: Pruebas ALDA-UPT
+name: Pruebas automatizadas ALDA-UPT
 
 on:
   push:
@@ -47,6 +47,8 @@ jobs:
       - name: Instalar dependencias del backend
         working-directory: backend
         run: python -m pip install -r requirements.txt pytest==9.2.0 httpx==0.28.1
+      - name: Preparar imagen del compilador C++
+        run: docker pull gcc:12
       - name: Ejecutar pytest con PostgreSQL temporal
         working-directory: backend
         run: python -m pytest -ra --junitxml=../qa-resultados/backend.xml
@@ -77,7 +79,7 @@ jobs:
             --test-reporter=spec --test-reporter-destination=stdout \
             --test-reporter=junit --test-reporter-destination=qa-resultados/browser.xml \
             qa/browser/flows.test.cjs
-      - name: Publicar resumen de los casos
+      - name: Publicar resultados automatizados por caso de uso
         if: always()
         run: python qa/report.py qa-resultados/backend.xml qa-resultados/browser.xml qa-resultados
       - name: Guardar reportes de la ejecución
