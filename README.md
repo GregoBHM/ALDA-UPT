@@ -21,7 +21,7 @@ Plataforma educativa de la **Escuela Profesional de Ingeniería de Sistemas (UPT
 
 ### 1. Instalar y comprobar herramientas
 
-Necesitas **Windows 10/11**, **Docker Desktop** (motor Linux con WSL 2), **Git** y **PowerShell**. Conexión a Internet y puertos **5173, 8000, 5432 y 8100** disponibles. Como referencia inicial, 8 GB de RAM y 15–20 GB libres.
+Necesitas **Windows 10/11**, **Docker Desktop** (motor Linux con WSL 2), **Git** y **PowerShell**. Conexión a Internet y puertos **5173, 8000 y 8100** disponibles. **PostgreSQL utiliza 5432 únicamente dentro de Docker**; no necesitas tener libre ese puerto en Windows. Como referencia inicial, 8 GB de RAM y 15–20 GB libres.
 
 Abre Docker Desktop y ejecuta en PowerShell:
 
@@ -95,6 +95,33 @@ El primer comando debe devolver `status: ok` y el segundo listar las tablas.
 | ChromaDB (puerto API, no interfaz web) | http://localhost:8100 |
 
 Luego prueba **Google Login**, crear un laboratorio, ejecutar `print("Hola desde ALDA")` en el IDE y usar el tutor IA si configuraste una clave válida. El estado `ok` de la API **no** confirma por sí solo que el IDE o la IA funcionen.
+
+## 🔄 Actualizar una instalación existente (sin borrar datos)
+
+Si ya clonaste ALDA y viste `Bind for 0.0.0.0:5432 failed: port is already allocated`, la versión corregida **no publica 5432 en Windows**. Desde PowerShell:
+
+```powershell
+Set-Location C:\proyectos\ALDA-UPT
+git branch --show-current
+git status --short
+git pull --ff-only origin fix/manual-despliegue-local-2026-11
+docker compose --env-file .env.local -f docker-compose.local.yml config --quiet
+docker compose --env-file .env.local -f docker-compose.local.yml up -d --no-deps --force-recreate db
+docker compose --env-file .env.local -f docker-compose.local.yml up -d --build
+docker compose --env-file .env.local -f docker-compose.local.yml ps
+Invoke-RestMethod http://localhost:8000/api/health
+```
+
+**Antes del `git pull`**, comprueba que la rama mostrada es `fix/manual-despliegue-local-2026-11` y que `git status --short` no indica cambios locales en archivos del proyecto. Si no coincide, revisa tu rama y resguarda los cambios antes de continuar. El archivo `.env.local` existente se conserva: **no vuelvas a copiar la plantilla encima**.
+
+El primer `up` recrea únicamente el contenedor `db` y **mantiene su volumen**. El segundo recompila/inicia los servicios y espera que el backend esté saludable antes de iniciar el frontend. **Nunca ejecutes `docker compose down -v` para resolver el conflicto de puertos.**
+
+Si no obtienes `status: ok`, revisa redes, logs y credenciales (sin divulgar las claves):
+
+```powershell
+docker compose --env-file .env.local -f docker-compose.local.yml logs --tail=60 backend db chroma
+docker exec alda_backend_local python -c "import socket; print(socket.gethostbyname('db')); s=socket.create_connection(('db',5432),5); print('DB TCP OK'); s.close()"
+```
 
 ## 🛠️ Comandos útiles
 
