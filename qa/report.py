@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
+from visor import write_viewer
+
 
 CASE_ID = re.compile(r"\bcp[-_]?(\d{2,3})\b", re.IGNORECASE)
 STATUSES = ("Falla", "Falla esperada", "Omitida", "Aprobada")
@@ -198,6 +200,7 @@ def main():
             )
 
     summary = "\n".join(lines) + "\n"
+    write_viewer(args.report_dir / "index.html", catalog, use_cases, results, RESULT_LABELS)
     (args.report_dir / "resumen.md").write_text(summary, encoding="utf-8")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as target:
