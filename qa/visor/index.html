@@ -42,6 +42,9 @@ h3{font-size:1rem}
 .variant{padding:.7rem;border:1px solid var(--line);border-radius:.55rem;overflow-wrap:anywhere}
 .variant h3{margin:.25rem 0}
 .variant small{color:var(--muted)}
+.case-label{margin-top:1rem}
+.case-button{width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:.45rem;color:var(--ink);font:inherit;padding:.5rem;cursor:pointer;display:flex;gap:.4rem;align-items:center;justify-content:space-between}
+.case-button[aria-pressed="true"]{border-color:var(--accent);background:#eef5fb}
 .evidence{display:flex;flex-wrap:wrap;gap:.35rem .8rem;margin-top:.65rem;font-size:.88rem}
 dt{font-weight:700}dd{margin:0 0 .4rem}dl{margin:.55rem 0 .2rem}
 ol{margin:.25rem 0 .6rem;padding-left:1.5rem}
@@ -60,8 +63,8 @@ ol{margin:.25rem 0 .6rem;padding-left:1.5rem}
     <section class="panel" aria-label="Selección de prueba">
       <label for="cu">Caso de uso</label>
       <select id="cu"></select>
-      <label for="cp">Caso de prueba</label>
-      <select id="cp"></select>
+      <h3 class="case-label">Pruebas del caso de uso</h3>
+      <ul class="variants" id="case-list" aria-label="Pruebas del caso de uso"></ul>
       <p class="hint">El estado corresponde a la ejecución identificada arriba. El catálogo incluye pruebas previstas que todavía están pendientes.</p>
     </section>
     <section class="panel" id="detail" aria-label="Resultado de la prueba" aria-live="polite"></section>
@@ -71,7 +74,7 @@ ol{margin:.25rem 0 .6rem;padding-left:1.5rem}
 <script>
 const data = JSON.parse(document.getElementById('report-data').textContent);
 const cu = document.getElementById('cu');
-const cp = document.getElementById('cp');
+let selectedCase = '';
 const detail = document.getElementById('detail');
 const titles = {PASSED:'Aprobadas', FAILED:'Fallidas', XFAIL:'Fallos esperados', SKIPPED:'Omitidas'};
 const observed = {
@@ -117,8 +120,11 @@ for (const use of data.uses) {
 }
 function render() {
   const use = data.uses.find(item => item.id === cu.value);
-  const item = use.cases.find(test => test.id === cp.value);
+  const item = use.cases.find(test => test.id === selectedCase);
   detail.replaceChildren();
+  for (const button of document.querySelectorAll('#case-list button')) {
+    button.setAttribute('aria-pressed', String(button.value === selectedCase));
+  }
   if (!item) {
     detail.append(tag('h2', 'Sin casos automatizados disponibles para este caso de uso.'));
     return;
@@ -150,6 +156,7 @@ function render() {
     const row = tag('li', '', 'variant');
     row.append(badge(variant.status), tag('h3', variant.name),
       tag('small', variant.scope + (variant.duration ? ' · ' + variant.duration + ' s' : '')));
+    if (variant.explanation) row.append(tag('p', variant.explanation));
     const actual = description?.actual?.[variant.status] || observed[variant.status];
     row.append(tag('p', actual));
     const evidence = tag('div', '', 'evidence');
@@ -162,13 +169,23 @@ function render() {
 }
 function selectUse(preferred) {
   const use = data.uses.find(item => item.id === cu.value);
-  cp.replaceChildren(...use.cases.map(item => new Option(item.id + ' · ' + item.title, item.id)));
-  if (use.cases.some(item => item.id === preferred)) cp.value = preferred;
-  else cp.value = (use.cases.find(item => item.variants.length) || use.cases[0])?.id || '';
+  const list = document.getElementById('case-list');
+  list.replaceChildren(...use.cases.map(item => {
+    const entry = tag('li', '');
+    const button = tag('button', '', 'case-button');
+    button.type = 'button';
+    button.value = item.id;
+    button.append(tag('span', item.id + ' · ' + item.title), badge(item.status));
+    button.addEventListener('click', () => {selectedCase = item.id; render(); updateLocation();});
+    entry.append(button);
+    return entry;
+  }));
+  if (use.cases.some(item => item.id === preferred)) selectedCase = preferred;
+  else selectedCase = (use.cases.find(item => item.variants.length) || use.cases[0])?.id || '';
   render();
 }
 function updateLocation() {
-  location.hash = new URLSearchParams({cu:cu.value,cp:cp.value});
+  location.hash = new URLSearchParams({cu:cu.value,cp:selectedCase});
 }
 function readLocation() {
   const params = new URLSearchParams(location.hash.slice(1));
@@ -177,7 +194,6 @@ function readLocation() {
   selectUse(params.get('cp'));
 }
 cu.addEventListener('change', () => {selectUse();updateLocation();});
-cp.addEventListener('change', () => {render();updateLocation();});
 addEventListener('hashchange', readLocation);
 readLocation();
 </script>

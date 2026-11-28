@@ -10,14 +10,28 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent / "visor"
 
 
+def use_case_id(case_id):
+    return f"CU-{(int(case_id.split('-')[1]) - 1) // 5 + 1:02d}"
+
+
+def verification_details():
+    return json.loads((ROOT / "verificaciones.json").read_text(encoding="utf-8"))
+
+
+def describe_verification(name, details):
+    method = name.rsplit("::", 1)[-1]
+    return details.get(method) or details.get(method.partition("[")[0])
+
+
 def source_link(result, tree_url):
     if not tree_url:
         return None
     if result.scope.startswith("Chromium"):
         return f"{tree_url}/qa/browser/flows.test.cjs"
     module = result.name.partition("::")[0]
-    if re.fullmatch(r"tests\.[a-zA-Z0-9_]+", module):
-        return f"{tree_url}/backend/{module.replace('.', '/')}.py"
+    match = re.match(r"tests\.(test_[a-zA-Z0-9_]+)(?:\.|$)", module)
+    if match:
+        return f"{tree_url}/backend/tests/{match.group(1)}.py"
     return None
 
 
@@ -28,6 +42,7 @@ def write_viewer(destination, catalog, use_cases, results, result_labels):
     run_id = os.environ.get("GITHUB_RUN_ID")
     repo_url = f"{server}/{repository}" if repository else None
     tree_url = f"{repo_url}/blob/{commit}" if repo_url and commit else None
+    details = verification_details()
     notes = json.loads((ROOT / "escenarios.json").read_text(encoding="utf-8"))
     with (ROOT / "criterios.csv").open(encoding="utf-8", newline="") as source:
         goals = {row["id"]: row["objetivo"] for row in csv.DictReader(source)}
@@ -42,7 +57,7 @@ def write_viewer(destination, catalog, use_cases, results, result_labels):
         planned = case["modo_documentado"] == "Automatizada"
         if not variants and not planned:
             continue
-        use = f"CU-{(int(case_id.split('-')[1]) - 1) // 5 + 1:02d}"
+        use = use_case_id(case_id)
         statuses = {result.status for result in variants}
         status = next((result_labels[value] for value in result_labels if value in statuses), "Pendiente")
         groups[use].append({
@@ -54,6 +69,7 @@ def write_viewer(destination, catalog, use_cases, results, result_labels):
             "description": notes.get(case_id) or {"expected": goals[case_id]},
             "variants": [{
                 "name": result.name.partition("::")[2] or result.name,
+                "explanation": describe_verification(result.name, details),
                 "status": result_labels[result.status],
                 "duration": result.duration,
                 "scope": result.scope,

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from xml.etree import ElementTree
 
-from visor import write_viewer
+from visor import describe_verification, use_case_id, verification_details, write_viewer
 
 
 CASE_ID = re.compile(r"\bcp[-_]?(\d{2,3})\b", re.IGNORECASE)
@@ -44,10 +44,9 @@ def read_results(report, scope):
     results = []
     for case in ElementTree.parse(report).getroot().iter("testcase"):
         name = case.get("name", "")
-        case_ids = tuple(dict.fromkeys(
-            f"CP-{int(number):02d}" for number in CASE_ID.findall(name.replace("_", " "))
-        ))
         module = case.get("classname", "")
+        codes = CASE_ID.findall(name.replace("_", " ")) or CASE_ID.findall(module.replace("_", " "))
+        case_ids = tuple(dict.fromkeys(f"CP-{int(number):02d}" for number in codes))
         problem = case.find("failure")
         if problem is None:
             problem = case.find("error")
@@ -90,20 +89,22 @@ def markdown_cell(value):
     )
 
 
-def write_details(report_dir, results):
-    columns = ["prueba", "casos", "estado", "duracion_segundos", "suite", "motivo", "salida"]
+def write_details(report_dir, results, details):
+    columns = ["prueba", "casos_de_uso", "casos", "estado", "duracion_segundos", "suite", "que_verifica", "motivo", "salida"]
     with (report_dir / "pruebas-individuales.csv").open("w", encoding="utf-8", newline="") as target:
         writer = csv.writer(target)
         writer.writerow(columns)
         writer.writerows(
-            [result.name, ", ".join(result.case_ids), RESULT_LABELS[result.status],
-             result.duration, result.scope, result.reason, result.output]
+            [result.name, ", ".join(sorted({use_case_id(case) for case in result.case_ids})),
+             ", ".join(result.case_ids), RESULT_LABELS[result.status], result.duration, result.scope,
+             describe_verification(result.name, details) or "", result.reason, result.output]
             for result in results
         )
 
+
+def verification_table(results):
     lines = [
-        "## Resultado de cada prueba ejecutada", "",
-        "| Prueba | Casos | Resultado | Duración (s) | Suite | Detalle |",
+        "| Verificación | Casos | Resultado | Duración (s) | Suite | Detalle |",
         "| --- | --- | --- | ---: | --- | --- |",
     ]
     for result in results:
@@ -113,8 +114,6 @@ def write_details(report_dir, results):
         cells = [result.name, ", ".join(result.case_ids), RESULT_LABELS[result.status],
                  result.duration, result.scope, reason]
         lines.append("| " + " | ".join(markdown_cell(cell) for cell in cells) + " |")
-    if not results:
-        lines = [*lines[:2], "Esta ejecución no produjo resultados JUnit."]
     return lines
 
 
@@ -124,8 +123,7 @@ def group_cases(catalog, use_cases, checks):
         raise ValueError(f"Casos sin entrada en el catálogo: {', '.join(sorted(unknown))}")
     groups = {use_case: [] for use_case in use_cases}
     for case_id, verification in sorted(checks.items()):
-        number = int(case_id.split("-")[1])
-        use_case = f"CU-{(number - 1) // 5 + 1:02d}"
+        use_case = use_case_id(case_id)
         statuses = {status for status, _ in verification}
         groups[use_case].append({
             "cu": use_case,
@@ -152,7 +150,13 @@ def main():
     browser = read_results(args.browser, "Chromium, API simulada")
     results = (backend or []) + (browser or [])
     checks = defaultdict(list)
+    results_by_use = defaultdict(list)
+    unlinked = []
     for result in results:
+        if not result.case_ids:
+            unlinked.append(result)
+        for code in sorted({use_case_id(case_id) for case_id in result.case_ids}):
+            results_by_use[code].append(result)
         for case_id in result.case_ids:
             checks[case_id].append((result.status, result.scope))
     groups = group_cases(catalog, use_cases, checks)
@@ -185,10 +189,19 @@ def main():
         "",
     ]
     lines.extend(f"- {status}: {counts[status]}" for status in STATUSES if counts[status])
-    lines.extend(["", *write_details(args.report_dir, results), "",
-                  "El artefacto incluye la salida de consola y el CSV con el diagnóstico completo."])
+    write_details(args.report_dir, results, verification_details())
+    lines.extend(["", "El CSV individual indica los CU de cada verificación. Las verificaciones compartidas aparecen en cada CU al que aportan evidencia."])
+    on_actions = bool(os.environ.get("GITHUB_ACTIONS"))
+
     for code, case in use_cases.items():
         lines.extend(["", f"## {code} · {case['caso_de_uso']}", ""])
+        if on_actions:
+            print(f"::group::{code} · {case['caso_de_uso']}")
+            for result in results_by_use[code]:
+                print(f"{RESULT_LABELS[result.status]:7}  {', '.join(result.case_ids)}  {result.name}")
+            if not results_by_use[code]:
+                print("Sin verificaciones registradas.")
+            print("::endgroup::")
         if not groups[code]:
             lines.append("Sin verificaciones automatizadas registradas en esta ejecución.")
             continue
@@ -199,6 +212,11 @@ def main():
                 f"{row['verificaciones']} | {row['alcance']} |"
             )
 
+        lines.extend(["", "<details>", "<summary>Verificaciones individuales</summary>", "",
+                      *verification_table(results_by_use[code]), "", "</details>"])
+
+    if unlinked:
+        lines.extend(["", "## Verificaciones sin CU asignado", "", *verification_table(unlinked)])
     summary = "\n".join(lines) + "\n"
     write_viewer(args.report_dir / "index.html", catalog, use_cases, results, RESULT_LABELS)
     (args.report_dir / "resumen.md").write_text(summary, encoding="utf-8")
