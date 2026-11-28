@@ -100,4 +100,12 @@ Ninguna.
 
 ![Firma de Andy Calizaya](evidencias/cp47_05_firma_andy_calizaya.png)
 
+**Segundo responsable**
+
+- Nombre: Gregory Huanca Merma
+- Fecha: 23/11/2026
+- Firma:
+
+![Firma de Gregory Huanca Merma](evidencias/cp47_06_firma_gregory_huanca.png)
+
 ---
